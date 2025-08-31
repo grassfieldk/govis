@@ -1,5 +1,7 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
+demo: https://v0-web-app-query-sql.vercel.app/
+
 ## Getting Started
 
 First, run the development server:
