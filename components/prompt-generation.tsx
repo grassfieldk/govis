@@ -1,30 +1,53 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/app/app/components/ui/button"
-import { Textarea } from "@/components/ui/textarea"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Badge } from "@/components/ui/badge"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/app/app/components/ui/tabs"
-import { Label } from "@/components/ui/label"
-import { FileText, Copy, Wand2, Settings, BookOpen, BarChart3, FileSearch, Lightbulb } from "lucide-react"
+import {
+  BarChart3,
+  BookOpen,
+  Copy,
+  FileSearch,
+  FileText,
+  Lightbulb,
+  Settings,
+  Wand2,
+} from "lucide-react";
+import { useState } from "react";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Textarea } from "@/components/ui/textarea";
 
 interface PromptTemplate {
-  id: string
-  name: string
-  description: string
-  category: string
-  template: string
-  variables: string[]
+  id: string;
+  name: string;
+  description: string;
+  category: string;
+  template: string;
+  variables: string[];
 }
 
 export function PromptGeneration() {
-  const [selectedPurpose, setSelectedPurpose] = useState("")
-  const [selectedModel, setSelectedModel] = useState("")
-  const [customContext, setCustomContext] = useState("")
-  const [generatedPrompt, setGeneratedPrompt] = useState("")
-  const [customVariables, setCustomVariables] = useState<Record<string, string>>({})
+  const [selectedPurpose, setSelectedPurpose] = useState("");
+  const [selectedModel, setSelectedModel] = useState("");
+  const [customContext, setCustomContext] = useState("");
+  const [generatedPrompt, setGeneratedPrompt] = useState("");
+  const [customVariables, setCustomVariables] = useState<
+    Record<string, string>
+  >({});
 
   const analysisTypes = [
     { value: "data-exploration", label: "データ探索・概要把握" },
@@ -33,7 +56,7 @@ export function PromptGeneration() {
     { value: "comparative-analysis", label: "比較分析・ベンチマーク" },
     { value: "report-generation", label: "レポート作成・要約" },
     { value: "insight-discovery", label: "インサイト発見・仮説検証" },
-  ]
+  ];
 
   const llmModels = [
     { value: "gpt-4", label: "GPT-4 (OpenAI)" },
@@ -41,7 +64,7 @@ export function PromptGeneration() {
     { value: "gemini-pro", label: "Gemini Pro (Google)" },
     { value: "llama-2", label: "Llama 2 (Meta)" },
     { value: "general", label: "汎用LLM" },
-  ]
+  ];
 
   const promptTemplates: PromptTemplate[] = [
     {
@@ -149,36 +172,39 @@ export function PromptGeneration() {
 - グラフ・表作成用データ`,
       variables: ["purpose", "custom_context"],
     },
-  ]
+  ];
 
   const generatePrompt = () => {
-    if (!selectedPurpose) return
+    if (!selectedPurpose) return;
 
-    const template = promptTemplates.find((t) => t.id === selectedPurpose)
-    if (!template) return
+    const template = promptTemplates.find((t) => t.id === selectedPurpose);
+    if (!template) return;
 
-    let prompt = template.template
-    prompt = prompt.replace("{purpose}", analysisTypes.find((t) => t.value === selectedPurpose)?.label || "")
-    prompt = prompt.replace("{custom_context}", customContext || "特になし")
+    let prompt = template.template;
+    prompt = prompt.replace(
+      "{purpose}",
+      analysisTypes.find((t) => t.value === selectedPurpose)?.label || "",
+    );
+    prompt = prompt.replace("{custom_context}", customContext || "特になし");
 
     // Replace custom variables
     Object.entries(customVariables).forEach(([key, value]) => {
-      prompt = prompt.replace(`{${key}}`, value)
-    })
+      prompt = prompt.replace(`{${key}}`, value);
+    });
 
-    setGeneratedPrompt(prompt)
-  }
+    setGeneratedPrompt(prompt);
+  };
 
   const copyPrompt = () => {
-    navigator.clipboard.writeText(generatedPrompt)
-  }
+    navigator.clipboard.writeText(generatedPrompt);
+  };
 
   const handleVariableChange = (variable: string, value: string) => {
     setCustomVariables((prev) => ({
       ...prev,
       [variable]: value,
-    }))
-  }
+    }));
+  };
 
   return (
     <div className="space-y-6">
@@ -196,13 +222,18 @@ export function PromptGeneration() {
                 <Wand2 className="w-5 h-5 text-primary" />
                 <span>自動プロンプト生成</span>
               </CardTitle>
-              <CardDescription>分析目的とLLMモデルを選択して、最適化されたプロンプトを自動生成します。</CardDescription>
+              <CardDescription>
+                分析目的とLLMモデルを選択して、最適化されたプロンプトを自動生成します。
+              </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="purpose">分析目的</Label>
-                  <Select value={selectedPurpose} onValueChange={setSelectedPurpose}>
+                  <Select
+                    value={selectedPurpose}
+                    onValueChange={setSelectedPurpose}
+                  >
                     <SelectTrigger>
                       <SelectValue placeholder="分析の目的を選択してください" />
                     </SelectTrigger>
@@ -218,7 +249,10 @@ export function PromptGeneration() {
 
                 <div className="space-y-2">
                   <Label htmlFor="model">対象LLMモデル</Label>
-                  <Select value={selectedModel} onValueChange={setSelectedModel}>
+                  <Select
+                    value={selectedModel}
+                    onValueChange={setSelectedModel}
+                  >
                     <SelectTrigger>
                       <SelectValue placeholder="LLMモデルを選択してください" />
                     </SelectTrigger>
@@ -244,7 +278,11 @@ export function PromptGeneration() {
                 />
               </div>
 
-              <Button onClick={generatePrompt} disabled={!selectedPurpose} className="w-full">
+              <Button
+                onClick={generatePrompt}
+                disabled={!selectedPurpose}
+                className="w-full"
+              >
                 <Wand2 className="w-4 h-4 mr-2" />
                 プロンプトを生成
               </Button>
@@ -262,19 +300,34 @@ export function PromptGeneration() {
                   </Button>
                 </div>
                 <CardDescription>
-                  {selectedModel && `${llmModels.find((m) => m.value === selectedModel)?.label} 向けに最適化`}
+                  {selectedModel &&
+                    `${llmModels.find((m) => m.value === selectedModel)?.label} 向けに最適化`}
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="bg-muted p-4 rounded-md">
-                  <pre className="text-sm whitespace-pre-wrap overflow-x-auto">{generatedPrompt}</pre>
+                  <pre className="text-sm whitespace-pre-wrap overflow-x-auto">
+                    {generatedPrompt}
+                  </pre>
                 </div>
                 <div className="flex items-center justify-between mt-4">
-                  <span className="text-sm text-muted-foreground">{generatedPrompt.length} 文字</span>
+                  <span className="text-sm text-muted-foreground">
+                    {generatedPrompt.length} 文字
+                  </span>
                   <div className="flex space-x-2">
-                    <Badge variant="outline">{analysisTypes.find((t) => t.value === selectedPurpose)?.label}</Badge>
+                    <Badge variant="outline">
+                      {
+                        analysisTypes.find((t) => t.value === selectedPurpose)
+                          ?.label
+                      }
+                    </Badge>
                     {selectedModel && (
-                      <Badge variant="outline">{llmModels.find((m) => m.value === selectedModel)?.label}</Badge>
+                      <Badge variant="outline">
+                        {
+                          llmModels.find((m) => m.value === selectedModel)
+                            ?.label
+                        }
+                      </Badge>
                     )}
                   </div>
                 </div>
@@ -290,25 +343,44 @@ export function PromptGeneration() {
                 <BookOpen className="w-5 h-5 text-primary" />
                 <span>プロンプトテンプレート</span>
               </CardTitle>
-              <CardDescription>用途別に最適化されたプロンプトテンプレートの一覧です。</CardDescription>
+              <CardDescription>
+                用途別に最適化されたプロンプトテンプレートの一覧です。
+              </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {promptTemplates.map((template) => (
-                  <Card key={template.id} className="cursor-pointer hover:bg-accent/50 transition-colors">
+                  <Card
+                    key={template.id}
+                    className="cursor-pointer hover:bg-accent/50 transition-colors"
+                  >
                     <CardHeader className="pb-2">
                       <div className="flex items-center space-x-2">
-                        {template.category === "exploration" && <FileSearch className="w-4 h-4 text-primary" />}
-                        {template.category === "analysis" && <BarChart3 className="w-4 h-4 text-primary" />}
-                        {template.category === "reporting" && <FileText className="w-4 h-4 text-primary" />}
-                        <CardTitle className="text-sm">{template.name}</CardTitle>
+                        {template.category === "exploration" && (
+                          <FileSearch className="w-4 h-4 text-primary" />
+                        )}
+                        {template.category === "analysis" && (
+                          <BarChart3 className="w-4 h-4 text-primary" />
+                        )}
+                        {template.category === "reporting" && (
+                          <FileText className="w-4 h-4 text-primary" />
+                        )}
+                        <CardTitle className="text-sm">
+                          {template.name}
+                        </CardTitle>
                       </div>
                     </CardHeader>
                     <CardContent>
-                      <p className="text-xs text-muted-foreground mb-3">{template.description}</p>
+                      <p className="text-xs text-muted-foreground mb-3">
+                        {template.description}
+                      </p>
                       <div className="flex flex-wrap gap-1 mb-3">
                         {template.variables.map((variable) => (
-                          <Badge key={variable} variant="outline" className="text-xs">
+                          <Badge
+                            key={variable}
+                            variant="outline"
+                            className="text-xs"
+                          >
                             {variable}
                           </Badge>
                         ))}
@@ -318,8 +390,8 @@ export function PromptGeneration() {
                         size="sm"
                         className="w-full bg-transparent"
                         onClick={() => {
-                          setSelectedPurpose(template.id)
-                          generatePrompt()
+                          setSelectedPurpose(template.id);
+                          generatePrompt();
                         }}
                       >
                         このテンプレートを使用
@@ -339,7 +411,9 @@ export function PromptGeneration() {
                 <Settings className="w-5 h-5 text-primary" />
                 <span>カスタムプロンプト作成</span>
               </CardTitle>
-              <CardDescription>独自の要求に合わせてプロンプトを自由に作成できます。</CardDescription>
+              <CardDescription>
+                独自の要求に合わせてプロンプトを自由に作成できます。
+              </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
@@ -354,13 +428,24 @@ export function PromptGeneration() {
               </div>
 
               <div className="flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">{generatedPrompt.length} 文字</span>
+                <span className="text-sm text-muted-foreground">
+                  {generatedPrompt.length} 文字
+                </span>
                 <div className="flex space-x-2">
-                  <Button variant="outline" size="sm" onClick={copyPrompt} disabled={!generatedPrompt}>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={copyPrompt}
+                    disabled={!generatedPrompt}
+                  >
                     <Copy className="w-4 h-4 mr-1" />
                     コピー
                   </Button>
-                  <Button variant="outline" size="sm" onClick={() => setGeneratedPrompt("")}>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setGeneratedPrompt("")}
+                  >
                     クリア
                   </Button>
                 </div>
@@ -372,7 +457,10 @@ export function PromptGeneration() {
                   <div className="text-sm">
                     <p className="font-medium mb-1">プロンプト作成のヒント</p>
                     <ul className="text-muted-foreground space-y-1 text-xs">
-                      <li>• データ構造（事業名、省庁名、予算額、執行率、年度、効果測定指標）を明記</li>
+                      <li>
+                        •
+                        データ構造（事業名、省庁名、予算額、執行率、年度、効果測定指標）を明記
+                      </li>
                       <li>• 具体的な分析要求と期待する出力形式を指定</li>
                       <li>• SQLクエリ例の提供を求める</li>
                       <li>• 政策的含意や改善提案の生成を依頼</li>
@@ -385,5 +473,5 @@ export function PromptGeneration() {
         </TabsContent>
       </Tabs>
     </div>
-  )
+  );
 }

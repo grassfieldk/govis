@@ -1,92 +1,109 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/app/app/components/ui/button"
-import { Textarea } from "@/components/ui/textarea"
-import { Badge } from "@/components/ui/badge"
-import { Separator } from "@/components/ui/separator"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/app/app/components/ui/tabs"
-import { Database, Play, Loader2, Copy, History, FileText, Download, Clock, CheckCircle, XCircle } from "lucide-react"
+import {
+  CheckCircle,
+  Clock,
+  Copy,
+  Database,
+  Download,
+  FileText,
+  History,
+  Loader2,
+  Play,
+  XCircle,
+} from "lucide-react";
+import { useState } from "react";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Textarea } from "@/components/ui/textarea";
 
 interface SQLResult {
-  id: string
-  query: string
-  timestamp: Date
-  status: "success" | "error" | "pending"
-  results?: any[]
-  error?: string
-  executionTime?: number
-  rowCount?: number
+  id: string;
+  query: string;
+  timestamp: Date;
+  status: "success" | "error" | "pending";
+  results?: any[];
+  error?: string;
+  executionTime?: number;
+  rowCount?: number;
 }
 
 export function SQLExecutionPanel() {
-  const [sqlQuery, setSqlQuery] = useState("")
-  const [isExecuting, setIsExecuting] = useState(false)
-  const [queryHistory, setQueryHistory] = useState<SQLResult[]>([])
-  const [currentResult, setCurrentResult] = useState<SQLResult | null>(null)
+  const [sqlQuery, setSqlQuery] = useState("");
+  const [isExecuting, setIsExecuting] = useState(false);
+  const [queryHistory, setQueryHistory] = useState<SQLResult[]>([]);
+  const [currentResult, setCurrentResult] = useState<SQLResult | null>(null);
 
   const sqlTemplates = [
     {
       name: "基本的な事業一覧",
-      query: `SELECT 
+      query: `SELECT
   事業名,
   省庁名,
   予算額,
   執行率
-FROM administrative_reviews 
+FROM administrative_reviews
 WHERE 年度 = '令和4年度'
 ORDER BY 予算額 DESC
 LIMIT 20;`,
     },
     {
       name: "省庁別予算集計",
-      query: `SELECT 
+      query: `SELECT
   省庁名,
   COUNT(*) as 事業数,
   SUM(予算額) as 総予算額,
   AVG(執行率) as 平均執行率
-FROM administrative_reviews 
+FROM administrative_reviews
 GROUP BY 省庁名
 ORDER BY 総予算額 DESC;`,
     },
     {
       name: "効果測定指標分析",
-      query: `SELECT 
+      query: `SELECT
   効果測定指標,
   COUNT(*) as 事業数,
   AVG(予算額) as 平均予算額
-FROM administrative_reviews 
+FROM administrative_reviews
 WHERE 効果測定指標 IS NOT NULL
 GROUP BY 効果測定指標
 ORDER BY 事業数 DESC;`,
     },
     {
       name: "年度別予算推移",
-      query: `SELECT 
+      query: `SELECT
   年度,
   COUNT(*) as 事業数,
   SUM(予算額) as 総予算額,
   AVG(執行率) as 平均執行率
-FROM administrative_reviews 
+FROM administrative_reviews
 GROUP BY 年度
 ORDER BY 年度;`,
     },
-  ]
+  ];
 
   const executeSQL = async () => {
-    if (!sqlQuery.trim()) return
+    if (!sqlQuery.trim()) return;
 
-    setIsExecuting(true)
+    setIsExecuting(true);
     const newResult: SQLResult = {
       id: Date.now().toString(),
       query: sqlQuery.trim(),
       timestamp: new Date(),
       status: "pending",
-    }
+    };
 
-    setCurrentResult(newResult)
-    setQueryHistory((prev) => [newResult, ...prev])
+    setCurrentResult(newResult);
+    setQueryHistory((prev) => [newResult, ...prev]);
 
     try {
       const response = await fetch("/api/duckdb", {
@@ -98,18 +115,18 @@ ORDER BY 年度;`,
           query: sqlQuery.trim(),
           type: "query",
         }),
-      })
+      });
 
-      const data = await response.json()
+      const data = await response.json();
 
       if (data.success) {
         const results = data.result.rows.map((row: any[]) => {
-          const obj: any = {}
+          const obj: any = {};
           data.result.columns.forEach((col: string, index: number) => {
-            obj[col] = row[index]
-          })
-          return obj
-        })
+            obj[col] = row[index];
+          });
+          return obj;
+        });
 
         const updatedResult: SQLResult = {
           ...newResult,
@@ -117,57 +134,63 @@ ORDER BY 年度;`,
           results,
           executionTime: data.result.executionTime,
           rowCount: data.result.rowCount,
-        }
+        };
 
-        setCurrentResult(updatedResult)
-        setQueryHistory((prev) => prev.map((q) => (q.id === newResult.id ? updatedResult : q)))
+        setCurrentResult(updatedResult);
+        setQueryHistory((prev) =>
+          prev.map((q) => (q.id === newResult.id ? updatedResult : q)),
+        );
       } else {
         const updatedResult: SQLResult = {
           ...newResult,
           status: "error",
           error: data.error || "クエリの実行中にエラーが発生しました",
-        }
+        };
 
-        setCurrentResult(updatedResult)
-        setQueryHistory((prev) => prev.map((q) => (q.id === newResult.id ? updatedResult : q)))
+        setCurrentResult(updatedResult);
+        setQueryHistory((prev) =>
+          prev.map((q) => (q.id === newResult.id ? updatedResult : q)),
+        );
       }
     } catch (error) {
       const updatedResult: SQLResult = {
         ...newResult,
         status: "error",
         error: "ネットワークエラーが発生しました",
-      }
+      };
 
-      setCurrentResult(updatedResult)
-      setQueryHistory((prev) => prev.map((q) => (q.id === newResult.id ? updatedResult : q)))
+      setCurrentResult(updatedResult);
+      setQueryHistory((prev) =>
+        prev.map((q) => (q.id === newResult.id ? updatedResult : q)),
+      );
     } finally {
-      setIsExecuting(false)
+      setIsExecuting(false);
     }
-  }
+  };
 
   const loadTemplate = (template: string) => {
-    setSqlQuery(template)
-  }
+    setSqlQuery(template);
+  };
 
   const copyQuery = (query: string) => {
-    navigator.clipboard.writeText(query)
-  }
+    navigator.clipboard.writeText(query);
+  };
 
   const exportResults = () => {
-    if (!currentResult?.results) return
+    if (!currentResult?.results) return;
 
     const csv = [
       Object.keys(currentResult.results[0]).join(","),
       ...currentResult.results.map((row) => Object.values(row).join(",")),
-    ].join("\n")
+    ].join("\n");
 
-    const blob = new Blob([csv], { type: "text/csv" })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement("a")
-    a.href = url
-    a.download = `query_results_${new Date().toISOString().split("T")[0]}.csv`
-    a.click()
-  }
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `query_results_${new Date().toISOString().split("T")[0]}.csv`;
+    a.click();
+  };
 
   return (
     <div className="space-y-6">
@@ -199,9 +222,16 @@ ORDER BY 年度;`,
                   disabled={isExecuting}
                 />
                 <div className="flex justify-between items-center">
-                  <span className="text-sm text-muted-foreground">{sqlQuery.length} 文字</span>
+                  <span className="text-sm text-muted-foreground">
+                    {sqlQuery.length} 文字
+                  </span>
                   <div className="flex space-x-2">
-                    <Button variant="outline" size="sm" onClick={() => copyQuery(sqlQuery)} disabled={!sqlQuery.trim()}>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => copyQuery(sqlQuery)}
+                      disabled={!sqlQuery.trim()}
+                    >
                       <Copy className="w-4 h-4 mr-1" />
                       コピー
                     </Button>
@@ -210,7 +240,11 @@ ORDER BY 年度;`,
                       disabled={!sqlQuery.trim() || isExecuting}
                       className="flex items-center space-x-2"
                     >
-                      {isExecuting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />}
+                      {isExecuting ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <Play className="w-4 h-4" />
+                      )}
                       <span>{isExecuting ? "実行中..." : "クエリ実行"}</span>
                     </Button>
                   </div>
@@ -234,7 +268,10 @@ ORDER BY 年度;`,
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {sqlTemplates.map((template, index) => (
-                  <Card key={index} className="cursor-pointer hover:bg-accent/50 transition-colors">
+                  <Card
+                    key={index}
+                    className="cursor-pointer hover:bg-accent/50 transition-colors"
+                  >
                     <CardHeader className="pb-2">
                       <CardTitle className="text-sm">{template.name}</CardTitle>
                     </CardHeader>
@@ -268,7 +305,9 @@ ORDER BY 年度;`,
             </CardHeader>
             <CardContent>
               {queryHistory.length === 0 ? (
-                <p className="text-center text-muted-foreground py-8">まだクエリを実行していません</p>
+                <p className="text-center text-muted-foreground py-8">
+                  まだクエリを実行していません
+                </p>
               ) : (
                 <div className="space-y-3">
                   {queryHistory.slice(0, 10).map((historyItem, index) => (
@@ -297,7 +336,9 @@ ORDER BY 年度;`,
                             {historyItem.query.length > 200 && "..."}
                           </pre>
                           {historyItem.rowCount && (
-                            <p className="text-xs text-muted-foreground mt-1">{historyItem.rowCount} 行を取得</p>
+                            <p className="text-xs text-muted-foreground mt-1">
+                              {historyItem.rowCount} 行を取得
+                            </p>
                           )}
                         </div>
                         <Button
@@ -309,7 +350,9 @@ ORDER BY 年度;`,
                           再実行
                         </Button>
                       </div>
-                      {index < queryHistory.slice(0, 10).length - 1 && <Separator className="mt-3" />}
+                      {index < queryHistory.slice(0, 10).length - 1 && (
+                        <Separator className="mt-3" />
+                      )}
                     </div>
                   ))}
                 </div>
@@ -326,7 +369,13 @@ ORDER BY 年度;`,
             <div className="flex items-center justify-between">
               <CardTitle className="flex items-center space-x-2">
                 <span>実行結果</span>
-                <Badge variant={currentResult.status === "success" ? "default" : "destructive"}>
+                <Badge
+                  variant={
+                    currentResult.status === "success"
+                      ? "default"
+                      : "destructive"
+                  }
+                >
                   {currentResult.status === "success" ? "成功" : "エラー"}
                 </Badge>
               </CardTitle>
@@ -344,7 +393,8 @@ ORDER BY 年度;`,
             </div>
             {currentResult.executionTime && (
               <CardDescription>
-                実行時間: {currentResult.executionTime.toFixed(0)}ms | 取得行数: {currentResult.rowCount}行
+                実行時間: {currentResult.executionTime.toFixed(0)}ms | 取得行数:{" "}
+                {currentResult.rowCount}行
               </CardDescription>
             )}
           </CardHeader>
@@ -355,11 +405,16 @@ ORDER BY 年度;`,
                   <table className="w-full text-sm">
                     <thead className="bg-muted sticky top-0">
                       <tr>
-                        {Object.keys(currentResult.results[0] || {}).map((key) => (
-                          <th key={key} className="px-3 py-2 text-left font-medium">
-                            {key}
-                          </th>
-                        ))}
+                        {Object.keys(currentResult.results[0] || {}).map(
+                          (key) => (
+                            <th
+                              key={key}
+                              className="px-3 py-2 text-left font-medium"
+                            >
+                              {key}
+                            </th>
+                          ),
+                        )}
                       </tr>
                     </thead>
                     <tbody>
@@ -379,8 +434,12 @@ ORDER BY 年度;`,
             ) : (
               currentResult.error && (
                 <div className="bg-destructive/10 border border-destructive/20 rounded-md p-4">
-                  <p className="text-sm text-destructive font-medium">エラーが発生しました</p>
-                  <pre className="text-xs text-destructive mt-2 overflow-x-auto">{currentResult.error}</pre>
+                  <p className="text-sm text-destructive font-medium">
+                    エラーが発生しました
+                  </p>
+                  <pre className="text-xs text-destructive mt-2 overflow-x-auto">
+                    {currentResult.error}
+                  </pre>
                 </div>
               )
             )}
@@ -388,5 +447,5 @@ ORDER BY 年度;`,
         </Card>
       )}
     </div>
-  )
+  );
 }
