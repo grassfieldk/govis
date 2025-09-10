@@ -199,13 +199,6 @@ export function PromptGeneration() {
     navigator.clipboard.writeText(generatedPrompt);
   };
 
-  const handleVariableChange = (variable: string, value: string) => {
-    setCustomVariables((prev) => ({
-      ...prev,
-      [variable]: value,
-    }));
-  };
-
   return (
     <div className="space-y-6">
       <Tabs defaultValue="generator" className="w-full">
@@ -268,14 +261,15 @@ export function PromptGeneration() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="context">追加コンテキスト（オプション）</Label>
-                <Textarea
-                  id="context"
-                  placeholder="特定の分析要求や注目したい観点があれば記入してください"
-                  value={customContext}
-                  onChange={(e) => setCustomContext(e.target.value)}
-                  className="min-h-[80px]"
-                />
+                <Label>
+                  追加コンテキスト（オプション）
+                  <Textarea
+                    placeholder="特定の分析要求や注目したい観点があれば記入してください"
+                    value={customContext}
+                    onChange={(e) => setCustomContext(e.target.value)}
+                    className="min-h-[80px]"
+                  />
+                </Label>
               </div>
 
               <Button
@@ -417,14 +411,15 @@ export function PromptGeneration() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="custom-prompt">カスタムプロンプト</Label>
-                <Textarea
-                  id="custom-prompt"
-                  placeholder="行政事業レビューデータを分析するためのカスタムプロンプトを作成してください..."
-                  value={generatedPrompt}
-                  onChange={(e) => setGeneratedPrompt(e.target.value)}
-                  className="min-h-[300px]"
-                />
+                <Label>
+                  カスタムプロンプト
+                  <Textarea
+                    placeholder="行政事業レビューデータを分析するためのカスタムプロンプトを作成してください..."
+                    value={generatedPrompt}
+                    onChange={(e) => setGeneratedPrompt(e.target.value)}
+                    className="min-h-[300px]"
+                  />
+                </Label>
               </div>
 
               <div className="flex items-center justify-between">

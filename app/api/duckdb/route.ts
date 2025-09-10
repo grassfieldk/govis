@@ -10,7 +10,7 @@ interface QueryResult {
 
 export async function POST(request: NextRequest) {
   try {
-    const { query, type } = await request.json();
+    const { query } = await request.json();
 
     // Simulate connection delay
     await new Promise((resolve) => setTimeout(resolve, 500));
@@ -100,14 +100,14 @@ export async function POST(request: NextRequest) {
     if (query.toLowerCase().includes("limit")) {
       const limitMatch = query.match(/limit\s+(\d+)/i);
       if (limitMatch) {
-        const limit = Number.parseInt(limitMatch[1]);
+        const limit = Number.parseInt(limitMatch[1], 10);
         resultRows = resultRows.slice(0, limit);
       }
     }
 
     if (query.toLowerCase().includes("order by 予算額 desc")) {
       resultRows = [...resultRows].sort(
-        (a, b) => Number.parseInt(b[2]) - Number.parseInt(a[2]),
+        (a, b) => Number.parseInt(b[2], 10) - Number.parseInt(a[2], 10),
       );
     }
 
@@ -157,7 +157,7 @@ export async function GET() {
       {
         success: false,
         status: "disconnected",
-        error: "データベースに接続できません",
+        error: `データベースに接続できません: ${error}`,
       },
       { status: 500 },
     );

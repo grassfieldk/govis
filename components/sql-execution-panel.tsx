@@ -156,7 +156,7 @@ ORDER BY 年度;`,
       const updatedResult: SQLResult = {
         ...newResult,
         status: "error",
-        error: "ネットワークエラーが発生しました",
+        error: `ネットワークエラーが発生しました: ${error}`,
       };
 
       setCurrentResult(updatedResult);

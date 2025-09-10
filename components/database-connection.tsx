@@ -7,7 +7,7 @@ import {
   RefreshCw,
   XCircle,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -26,7 +26,7 @@ export function DatabaseConnection() {
   });
   const [isRefreshing, setIsRefreshing] = useState(false);
 
-  const checkConnection = async () => {
+  const checkConnection = useCallback(async () => {
     setIsRefreshing(true);
     setConnectionStatus({ status: "connecting" });
 
@@ -50,16 +50,16 @@ export function DatabaseConnection() {
     } catch (error) {
       setConnectionStatus({
         status: "disconnected",
-        error: "ネットワークエラーが発生しました",
+        error: `ネットワークエラーが発生しました: ${error}`,
       });
     } finally {
       setIsRefreshing(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     checkConnection();
-  }, []);
+  }, [checkConnection]);
 
   const getStatusIcon = () => {
     switch (connectionStatus.status) {
