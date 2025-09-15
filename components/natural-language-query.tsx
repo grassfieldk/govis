@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Editor from '@monaco-editor/react';
+import { useTheme } from "next-themes";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
@@ -21,6 +22,9 @@ export function NaturalLanguageQuery() {
   const [result, setResult] = useState<QueryResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isClient, setIsClient] = useState(false);
+  const [showAllRows, setShowAllRows] = useState(false);
+  const [displayLimit, setDisplayLimit] = useState(10);
+  const { theme } = useTheme();
 
   // クライアントサイドでのみLocalStorageから読み込み
   useEffect(() => {
@@ -72,6 +76,9 @@ export function NaturalLanguageQuery() {
     setIsLoading(true);
     setError(null);
     setResult(null);
+    // 新しい分析実行時に表示設定をリセット
+    setShowAllRows(false);
+    setDisplayLimit(10);
 
     try {
       // 1. AIでSQLを生成（サーバーサイド）
@@ -187,7 +194,7 @@ export function NaturalLanguageQuery() {
                     height="120px"
                     defaultLanguage="sql"
                     value={result.generatedSQL}
-                    theme="vs-light"
+                    theme={theme === "dark" ? "vs-dark" : "vs-light"}
                     options={{
                       readOnly: true,
                       minimap: { enabled: false },
@@ -213,21 +220,48 @@ export function NaturalLanguageQuery() {
               {/* 結果テーブル */}
               {result.data.length > 0 && (
                 <div className="space-y-2">
-                  <h4 className="text-sm font-medium">実行結果:</h4>
-                  <div className="border rounded-md overflow-x-auto">
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-sm font-medium">実行結果:</h4>
+                    {result.data.length > 10 && (
+                      <div className="flex items-center space-x-2">
+                        <span className="text-xs text-muted-foreground">
+                          表示件数:
+                        </span>
+                        <select
+                          value={showAllRows ? "all" : displayLimit}
+                          onChange={(e) => {
+                            const value = e.target.value;
+                            if (value === "all") {
+                              setShowAllRows(true);
+                            } else {
+                              setShowAllRows(false);
+                              setDisplayLimit(Number(value));
+                            }
+                          }}
+                          className="text-xs border border-border bg-background text-foreground rounded px-2 py-1"
+                        >
+                          <option value={10}>10件</option>
+                          <option value={50}>50件</option>
+                          <option value={100}>100件</option>
+                          <option value="all">全件（{result.rowCount}件）</option>
+                        </select>
+                      </div>
+                    )}
+                  </div>
+                  <div className="border border-border rounded-md overflow-x-auto">
                     <table className="w-full text-xs">
-                      <thead className="bg-gray-50">
+                      <thead className="bg-muted">
                         <tr>
                           {Object.keys(result.data[0]).map((key) => (
-                            <th key={key} className="p-2 text-left font-medium">
+                            <th key={key} className="p-2 text-left font-medium text-muted-foreground">
                               {key}
                             </th>
                           ))}
                         </tr>
                       </thead>
                       <tbody>
-                        {result.data.slice(0, 10).map((row, index) => (
-                          <tr key={index} className="border-t">
+                        {(showAllRows ? result.data : result.data.slice(0, displayLimit)).map((row, index) => (
+                          <tr key={index} className="border-t border-border">
                             {Object.values(row).map((value, cellIndex) => (
                               <td key={cellIndex} className="p-2">
                                 {typeof value === 'string' && value.length > 50
@@ -239,11 +273,12 @@ export function NaturalLanguageQuery() {
                         ))}
                       </tbody>
                     </table>
-                    {result.data.length > 10 && (
-                      <div className="p-2 text-xs text-gray-500 bg-gray-50">
-                        最初の10件を表示（全{result.rowCount}件）
-                      </div>
-                    )}
+                    <div className="p-2 text-xs text-muted-foreground bg-muted">
+                      {showAllRows
+                        ? `全${result.rowCount}件を表示中`
+                        : `${Math.min(displayLimit, result.data.length)}件を表示中（全${result.rowCount}件）`
+                      }
+                    </div>
                   </div>
                 </div>
               )}

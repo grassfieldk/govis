@@ -14,6 +14,7 @@ import {
   XCircle,
 } from "lucide-react";
 import { useState, useEffect } from "react";
+import { useTheme } from "next-themes";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -45,6 +46,9 @@ export function SQLExecutionPanel() {
   const [queryHistory, setQueryHistory] = useState<SQLResult[]>([]);
   const [currentResult, setCurrentResult] = useState<SQLResult | null>(null);
   const [isClient, setIsClient] = useState(false);
+  const [showAllRows, setShowAllRows] = useState(false);
+  const [displayLimit, setDisplayLimit] = useState(10);
+  const { theme } = useTheme();
 
   // クライアントサイドでのみLocalStorageから読み込み
   useEffect(() => {
@@ -165,6 +169,10 @@ LIMIT 5;`,
     if (!sqlQuery.trim()) return;
 
     setIsExecuting(true);
+    // 新しいクエリ実行時に表示設定をリセット
+    setShowAllRows(false);
+    setDisplayLimit(10);
+
     const newResult: SQLResult = {
       id: Date.now().toString(),
       query: sqlQuery.trim(),
@@ -274,7 +282,7 @@ LIMIT 5;`,
                     defaultLanguage="sql"
                     value={sqlQuery}
                     onChange={(value) => setSqlQuery(value || "")}
-                    theme="vs-light"
+                    theme={theme === "dark" ? "vs-dark" : "vs-light"}
                     options={{
                       minimap: { enabled: false },
                       scrollBeyondLastLine: false,
@@ -471,35 +479,68 @@ LIMIT 5;`,
           </CardHeader>
           <CardContent>
             {currentResult.results ? (
-              <div className="border rounded-md overflow-hidden">
-                <div className="overflow-x-auto max-h-96">
-                  <table className="w-full text-sm">
-                    <thead className="bg-muted sticky top-0">
-                      <tr>
-                        {Object.keys(currentResult.results[0] || {}).map(
-                          (key) => (
-                            <th
-                              key={key}
-                              className="px-3 py-2 text-left font-medium"
-                            >
-                              {key}
-                            </th>
-                          ),
-                        )}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {currentResult.results.map((row, index) => (
-                        <tr key={index} className="border-t hover:bg-muted/50">
-                          {Object.values(row).map((value, cellIndex) => (
-                            <td key={cellIndex} className="px-3 py-2">
-                              {String(value)}
-                            </td>
-                          ))}
+              <div className="space-y-2">
+                {currentResult.results.length > 10 && (
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-2">
+                      <span className="text-xs text-muted-foreground">表示件数:</span>
+                      <select
+                        value={showAllRows ? "all" : displayLimit}
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          if (value === "all") {
+                            setShowAllRows(true);
+                          } else {
+                            setShowAllRows(false);
+                            setDisplayLimit(Number(value));
+                          }
+                        }}
+                        className="text-xs border border-border bg-background text-foreground rounded px-2 py-1"
+                      >
+                        <option value={10}>10件</option>
+                        <option value={50}>50件</option>
+                        <option value={100}>100件</option>
+                        <option value="all">全件（{currentResult.rowCount}件）</option>
+                      </select>
+                    </div>
+                  </div>
+                )}
+                <div className="border border-border rounded-md overflow-hidden">
+                  <div className="overflow-x-auto max-h-96">
+                    <table className="w-full text-sm">
+                      <thead className="bg-muted sticky top-0">
+                        <tr>
+                          {Object.keys(currentResult.results[0] || {}).map(
+                            (key) => (
+                              <th
+                                key={key}
+                                className="px-3 py-2 text-left font-medium text-muted-foreground"
+                              >
+                                {key}
+                              </th>
+                            ),
+                          )}
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                      </thead>
+                      <tbody>
+                        {(showAllRows ? currentResult.results : currentResult.results.slice(0, displayLimit)).map((row, index) => (
+                          <tr key={index} className="border-t border-border hover:bg-muted/50">
+                            {Object.values(row).map((value, cellIndex) => (
+                              <td key={cellIndex} className="px-3 py-2">
+                                {String(value)}
+                              </td>
+                            ))}
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                    <div className="p-2 text-xs text-muted-foreground bg-muted">
+                      {showAllRows
+                        ? `全${currentResult.rowCount}件を表示中`
+                        : `${Math.min(displayLimit, currentResult.results.length)}件を表示中（全${currentResult.rowCount}件）`
+                      }
+                    </div>
+                  </div>
                 </div>
               </div>
             ) : (

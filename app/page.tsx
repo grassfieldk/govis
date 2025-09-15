@@ -3,6 +3,7 @@ import { DatabaseConnection } from "@/components/database-connection";
 import { NaturalLanguageQuery } from "@/components/natural-language-query";
 import { PromptGeneration } from "@/components/prompt-generation";
 import { SQLExecutionPanel } from "@/components/sql-execution-panel";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -27,6 +28,7 @@ export default function HomePage() {
               </div>
             </div>
             <div className="flex items-center space-x-2">
+              <ThemeToggle />
               <Button variant="outline" size="sm">
                 <BarChart3 className="w-4 h-4 mr-2" />
                 ダッシュボード
