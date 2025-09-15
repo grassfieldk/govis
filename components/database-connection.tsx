@@ -18,6 +18,12 @@ interface ConnectionStatus {
   tables?: string[];
   version?: string;
   error?: string;
+  schemaInfo?: {
+    exists: boolean;
+    columnCount: number;
+    sampleCount: number;
+    error?: string;
+  };
 }
 
 export function DatabaseConnection() {
@@ -31,22 +37,43 @@ export function DatabaseConnection() {
     setConnectionStatus({ status: "connecting" });
 
     try {
-      const response = await fetch("/api/duckdb");
-      const data = await response.json();
+      // 1. 接続テスト
+      const connectionResponse = await fetch("/api/supabase", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "test" }),
+      });
+      const connectionData = await connectionResponse.json();
 
-      if (data.success) {
-        setConnectionStatus({
-          status: "connected",
-          database: data.database,
-          tables: data.tables,
-          version: data.version,
-        });
-      } else {
+      if (!connectionData.success) {
         setConnectionStatus({
           status: "disconnected",
-          error: data.error,
+          error: connectionData.error,
         });
+        return;
       }
+
+      // 2. スキーマ情報取得
+      const schemaResponse = await fetch("/api/supabase", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "schema", query: "govis_main_data" }),
+      });
+      const schemaData = await schemaResponse.json();
+
+      setConnectionStatus({
+        status: "connected",
+        database: "Supabase PostgreSQL",
+        tables: ["govis_main_data"],
+        version: "PostgreSQL 14+",
+        schemaInfo: {
+          exists: schemaData.exists || false,
+          columnCount: schemaData.columns?.length || 0,
+          sampleCount: schemaData.sampleCount || 0,
+          error: schemaData.error
+        }
+      });
+
     } catch (error) {
       setConnectionStatus({
         status: "disconnected",
@@ -89,7 +116,7 @@ export function DatabaseConnection() {
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center space-x-2">
             <Database className="w-5 h-5 text-primary" />
-            <span>DuckDB接続状態</span>
+            <span>PostgreSQL接続状態</span>
           </CardTitle>
           <Button
             variant="outline"
@@ -135,6 +162,38 @@ export function DatabaseConnection() {
                 ))}
               </div>
             </div>
+
+            {/* スキーマ情報表示 */}
+            {connectionStatus.schemaInfo && (
+              <div className="mt-4 p-3 bg-muted/30 rounded-lg">
+                <h4 className="text-sm font-medium mb-2">スキーマ情報</h4>
+                <div className="space-y-1 text-xs">
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">テーブル存在:</span>
+                    <Badge variant={connectionStatus.schemaInfo.exists ? "default" : "destructive"} className="text-xs">
+                      {connectionStatus.schemaInfo.exists ? "あり" : "なし"}
+                    </Badge>
+                  </div>
+                  {connectionStatus.schemaInfo.exists && (
+                    <>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">カラム数:</span>
+                        <span className="font-mono">{connectionStatus.schemaInfo.columnCount}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">データ件数:</span>
+                        <span className="font-mono">{connectionStatus.schemaInfo.sampleCount.toLocaleString()}</span>
+                      </div>
+                    </>
+                  )}
+                  {connectionStatus.schemaInfo.error && (
+                    <div className="text-destructive text-xs mt-1">
+                      エラー: {connectionStatus.schemaInfo.error}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
         )}
 

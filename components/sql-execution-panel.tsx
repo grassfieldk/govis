@@ -106,14 +106,14 @@ ORDER BY 年度;`,
     setQueryHistory((prev) => [newResult, ...prev]);
 
     try {
-      const response = await fetch("/api/duckdb", {
+      const response = await fetch("/api/supabase", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
+          action: "execute",
           query: sqlQuery.trim(),
-          type: "query",
         }),
       });
 
@@ -209,7 +209,7 @@ ORDER BY 年度;`,
                 <span>SQL クエリエディター</span>
               </CardTitle>
               <CardDescription>
-                DuckDBに対してSQLクエリを直接実行します。行政事業レビューデータを分析できます。
+                PostgreSQLに対してSQLクエリを直接実行します。行政事業レビューデータを分析できます。
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">

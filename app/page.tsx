@@ -42,7 +42,7 @@ export default function HomePage() {
             データ分析クエリシステム
           </h2>
           <p className="text-lg text-muted-foreground">
-            自然言語処理、SQL実行、プロンプト生成機能を統合したDuckDB連携分析ツール
+            自然言語処理、SQL実行、プロンプト生成機能を統合したPostgreSQL連携分析ツール
           </p>
         </div>
 
@@ -97,7 +97,7 @@ export default function HomePage() {
               <p className="text-2xl font-bold text-foreground">
                 行政事業レビュー
               </p>
-              <p className="text-sm text-muted-foreground">CSV → DuckDB</p>
+              <p className="text-sm text-muted-foreground">CSV → PostgreSQL</p>
             </CardContent>
           </Card>
 

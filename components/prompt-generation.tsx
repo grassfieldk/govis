@@ -75,7 +75,7 @@ export function PromptGeneration() {
       template: `# 行政事業レビューデータ分析タスク
 
 ## データセット概要
-行政事業レビューのCSVデータをDuckDBに格納したデータセットを分析してください。
+行政事業レビューのCSVデータをPostgreSQLに格納したデータセットを分析してください。
 
 ## 分析目的
 {purpose}
@@ -109,7 +109,7 @@ export function PromptGeneration() {
       template: `# 行政事業レビュー統計分析
 
 ## 分析対象
-行政事業レビューデータセット（DuckDB格納）
+行政事業レビューデータセット（PostgreSQL格納）
 
 ## 統計分析要求
 {purpose}
@@ -142,7 +142,7 @@ export function PromptGeneration() {
 {purpose}
 
 ## データソース
-行政事業レビューCSVデータ（DuckDB処理済み）
+行政事業レビューCSVデータ（PostgreSQL処理済み）
 
 ## レポート構成要求
 1. **エグゼクティブサマリー**
