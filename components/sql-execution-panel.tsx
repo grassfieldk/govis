@@ -1,5 +1,6 @@
 "use client";
 
+import Editor from '@monaco-editor/react';
 import {
   CheckCircle,
   Clock,
@@ -24,7 +25,6 @@ import {
 } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Textarea } from "@/components/ui/textarea";
 
 interface SQLResult {
   id: string;
@@ -195,13 +195,30 @@ LIMIT 5;`,
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Textarea
-                  placeholder="SELECT * FROM administrative_reviews LIMIT 10;"
-                  value={sqlQuery}
-                  onChange={(e) => setSqlQuery(e.target.value)}
-                  className="min-h-[200px] font-mono text-sm resize-none"
-                  disabled={isExecuting}
-                />
+                <div className="border rounded-md overflow-hidden">
+                  <Editor
+                    height="200px"
+                    defaultLanguage="sql"
+                    value={sqlQuery}
+                    onChange={(value) => setSqlQuery(value || "")}
+                    theme="vs-light"
+                    options={{
+                      minimap: { enabled: false },
+                      scrollBeyondLastLine: false,
+                      fontSize: 14,
+                      fontFamily: 'Monaco, "Cascadia Code", "Roboto Mono", monospace',
+                      lineNumbers: "on",
+                      wordWrap: "on",
+                      automaticLayout: true,
+                      readOnly: isExecuting,
+                      tabSize: 2,
+                      insertSpaces: true,
+                      formatOnPaste: true,
+                      formatOnType: true,
+                      padding: { top: 12, bottom: 12 },
+                    }}
+                  />
+                </div>
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-muted-foreground">
                     {sqlQuery.length} 文字

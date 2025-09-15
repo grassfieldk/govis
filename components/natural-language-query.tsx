@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Editor from '@monaco-editor/react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
@@ -144,9 +145,32 @@ export function NaturalLanguageQuery() {
               {/* 生成されたSQL */}
               <div className="space-y-2">
                 <h4 className="text-sm font-medium">生成されたSQL:</h4>
-                <pre className="p-3 bg-gray-50 rounded-md text-xs overflow-x-auto">
-                  {result.generatedSQL}
-                </pre>
+                <div className="border rounded-md overflow-hidden">
+                  <Editor
+                    height="120px"
+                    defaultLanguage="sql"
+                    value={result.generatedSQL}
+                    theme="vs-light"
+                    options={{
+                      readOnly: true,
+                      minimap: { enabled: false },
+                      scrollBeyondLastLine: false,
+                      fontSize: 12,
+                      fontFamily: 'Monaco, "Cascadia Code", "Roboto Mono", monospace',
+                      lineNumbers: "off",
+                      wordWrap: "on",
+                      automaticLayout: true,
+                      scrollbar: {
+                        vertical: "hidden",
+                        horizontal: "auto",
+                      },
+                      overviewRulerLanes: 0,
+                      hideCursorInOverviewRuler: true,
+                      overviewRulerBorder: false,
+                      padding: { top: 8, bottom: 8 },
+                    }}
+                  />
+                </div>
               </div>
 
               {/* 結果テーブル */}
