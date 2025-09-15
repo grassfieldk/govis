@@ -13,7 +13,7 @@ import {
   Play,
   XCircle,
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -38,10 +38,83 @@ interface SQLResult {
 }
 
 export function SQLExecutionPanel() {
+  // 初期値は空で、useEffectでLocalStorageから読み込み
   const [sqlQuery, setSqlQuery] = useState("");
   const [isExecuting, setIsExecuting] = useState(false);
+  const [activeTab, setActiveTab] = useState("editor");
   const [queryHistory, setQueryHistory] = useState<SQLResult[]>([]);
   const [currentResult, setCurrentResult] = useState<SQLResult | null>(null);
+  const [isClient, setIsClient] = useState(false);
+
+  // クライアントサイドでのみLocalStorageから読み込み
+  useEffect(() => {
+    setIsClient(true);
+
+    // SQLクエリを復元
+    const savedQuery = localStorage.getItem('sql-query');
+    if (savedQuery) {
+      setSqlQuery(savedQuery);
+    }
+
+    // アクティブタブを復元
+    const savedTab = localStorage.getItem('sql-active-tab');
+    if (savedTab) {
+      setActiveTab(savedTab);
+    }
+
+    // クエリ履歴を復元
+    const savedHistory = localStorage.getItem('sql-query-history');
+    if (savedHistory) {
+      const parsed = JSON.parse(savedHistory);
+      const restored = parsed.map((item: SQLResult & { timestamp: string }) => ({
+        ...item,
+        timestamp: new Date(item.timestamp)
+      }));
+      setQueryHistory(restored);
+    }
+
+    // 現在の結果を復元
+    const savedResult = localStorage.getItem('sql-current-result');
+    if (savedResult) {
+      const parsed = JSON.parse(savedResult);
+      setCurrentResult({
+        ...parsed,
+        timestamp: new Date(parsed.timestamp)
+      });
+    }
+  }, []);
+
+  // SQLクエリの変更をLocalStorageに保存
+  useEffect(() => {
+    if (isClient) {
+      localStorage.setItem('sql-query', sqlQuery);
+    }
+  }, [sqlQuery, isClient]);
+
+  // アクティブタブの変更をLocalStorageに保存
+  useEffect(() => {
+    if (isClient) {
+      localStorage.setItem('sql-active-tab', activeTab);
+    }
+  }, [activeTab, isClient]);
+
+  // クエリ履歴の変更をLocalStorageに保存
+  useEffect(() => {
+    if (isClient) {
+      localStorage.setItem('sql-query-history', JSON.stringify(queryHistory));
+    }
+  }, [queryHistory, isClient]);
+
+  // 現在の結果の変更をLocalStorageに保存
+  useEffect(() => {
+    if (isClient) {
+      if (currentResult) {
+        localStorage.setItem('sql-current-result', JSON.stringify(currentResult));
+      } else {
+        localStorage.removeItem('sql-current-result');
+      }
+    }
+  }, [currentResult, isClient]);
 
   const sqlTemplates = [
     {
@@ -175,7 +248,7 @@ LIMIT 5;`,
 
   return (
     <div className="space-y-6">
-      <Tabs defaultValue="editor" className="w-full">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="editor">クエリ実行</TabsTrigger>
           <TabsTrigger value="templates">クエリテンプレート</TabsTrigger>

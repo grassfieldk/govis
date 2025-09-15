@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Editor from '@monaco-editor/react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -15,10 +15,47 @@ interface QueryResult {
 }
 
 export function NaturalLanguageQuery() {
+  // 初期値は空で、useEffectでLocalStorageから読み込み
   const [question, setQuestion] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState<QueryResult | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [isClient, setIsClient] = useState(false);
+
+  // クライアントサイドでのみLocalStorageから読み込み
+  useEffect(() => {
+    setIsClient(true);
+
+    // 質問を復元
+    const savedQuestion = localStorage.getItem('natural-language-question');
+    if (savedQuestion) {
+      setQuestion(savedQuestion);
+    }
+
+    // 結果を復元
+    const savedResult = localStorage.getItem('natural-language-result');
+    if (savedResult) {
+      setResult(JSON.parse(savedResult));
+    }
+  }, []);
+
+  // 質問の変更をLocalStorageに保存
+  useEffect(() => {
+    if (isClient) {
+      localStorage.setItem('natural-language-question', question);
+    }
+  }, [question, isClient]);
+
+  // 結果の変更をLocalStorageに保存
+  useEffect(() => {
+    if (isClient) {
+      if (result) {
+        localStorage.setItem('natural-language-result', JSON.stringify(result));
+      } else {
+        localStorage.removeItem('natural-language-result');
+      }
+    }
+  }, [result, isClient]);
 
   // サンプル質問（元のアプリから）
   const sampleQuestions = [
