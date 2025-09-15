@@ -1,303 +1,195 @@
 "use client";
 
-import {
-  Copy,
-  History,
-  Lightbulb,
-  Loader2,
-  MessageSquare,
-  Send,
-} from "lucide-react";
 import { useState } from "react";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
 
 interface QueryResult {
-  id: string;
-  query: string;
-  sql: string;
-  timestamp: Date;
-  status: "success" | "error" | "pending";
-  results?: any[];
-  error?: string;
+  data: Record<string, unknown>[];
+  rowCount: number;
+  executionTime: number;
+  generatedSQL: string;
 }
 
 export function NaturalLanguageQuery() {
-  const [query, setQuery] = useState("");
+  const [question, setQuestion] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [queryHistory, setQueryHistory] = useState<QueryResult[]>([]);
-  const [currentResult, setCurrentResult] = useState<QueryResult | null>(null);
+  const [result, setResult] = useState<QueryResult | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
-  const exampleQueries = [
-    "令和4年度の予算額が最も大きい事業を教えて",
-    "厚生労働省の事業で効果測定指標が設定されているものは？",
-    "予算執行率が90%以下の事業を省庁別に集計して",
-    "過去3年間で予算が増加している事業の傾向を分析して",
+  // サンプル質問（元のアプリから）
+  const sampleQuestions = [
+    "デジタル庁の支出額の合計はいくらですか？",
+    "こども家庭庁が最も多く支出している事業名トップ3を教えてください。",
+    "防衛省への支出で、契約相手が多い法人名を5つリストアップしてください。",
+    "支出額が10億円を超えている契約の府省庁別件数を教えて。",
+    "全データの最初の5件を表示してください。"
   ];
 
   const handleSubmit = async () => {
-    if (!query.trim()) return;
+    if (!question.trim()) return;
 
     setIsLoading(true);
-    const newQuery: QueryResult = {
-      id: Date.now().toString(),
-      query: query.trim(),
-      sql: "",
-      timestamp: new Date(),
-      status: "pending",
-    };
+    setError(null);
+    setResult(null);
 
-    setCurrentResult(newQuery);
-    setQueryHistory((prev) => [newQuery, ...prev]);
+    try {
+      // 1. AIでSQLを生成（サーバーサイド）
+      console.log("自然言語質問:", question);
 
-    // Simulate natural language processing
-    setTimeout(() => {
-      const mockSQL = `-- 自然言語から生成されたSQL
-SELECT
-  事業名,
-  省庁名,
-  予算額,
-  執行率
-FROM administrative_reviews
-WHERE 年度 = '令和4年度'
-ORDER BY 予算額 DESC
-LIMIT 10;`;
+      const aiResponse = await fetch("/api/ai", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ question })
+      });
 
-      const updatedQuery: QueryResult = {
-        ...newQuery,
-        sql: mockSQL,
-        status: "success",
-        results: [
-          {
-            事業名: "社会保障制度改革",
-            省庁名: "厚生労働省",
-            予算額: "1,200億円",
-            執行率: "95%",
-          },
-          {
-            事業名: "インフラ整備事業",
-            省庁名: "国土交通省",
-            予算額: "800億円",
-            執行率: "88%",
-          },
-          {
-            事業名: "教育振興事業",
-            省庁名: "文部科学省",
-            予算額: "600億円",
-            執行率: "92%",
-          },
-        ],
-      };
+      const aiData = await aiResponse.json();
 
-      setCurrentResult(updatedQuery);
-      setQueryHistory((prev) =>
-        prev.map((q) => (q.id === newQuery.id ? updatedQuery : q)),
-      );
+      if (!aiResponse.ok || !aiData.success) {
+        throw new Error(aiData.error || "SQL生成に失敗しました");
+      }
+
+      console.log("生成されたSQL:", aiData.sql);
+
+      // 2. SQLを実行
+      const response = await fetch("/api/supabase", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "execute",
+          query: aiData.sql
+        })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok || data.error) {
+        throw new Error(data.error || "クエリの実行に失敗しました");
+      }
+
+      setResult({
+        data: data.result || [],
+        rowCount: data.rowCount || 0,
+        executionTime: data.executionTime || 0,
+        generatedSQL: aiData.sql
+      });
+
+    } catch (err) {
+      console.error("クエリ実行エラー:", err);
+      setError(err instanceof Error ? err.message : "Unknown error");
+    } finally {
       setIsLoading(false);
-      setQuery("");
-    }, 2000);
-  };
-
-  const copySQL = (sql: string) => {
-    navigator.clipboard.writeText(sql);
+    }
   };
 
   return (
     <div className="space-y-6">
-      {/* Query Input Section */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center space-x-2">
-            <MessageSquare className="w-5 h-5 text-primary" />
-            <span>自然言語クエリ入力</span>
-          </CardTitle>
-          <CardDescription>
-            日本語で質問を入力してください。システムが自動的にSQLクエリに変換して実行します。
-          </CardDescription>
+          <CardTitle>自然言語でデータを分析</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
+          {/* サンプル質問 */}
           <div className="space-y-2">
-            <Textarea
-              placeholder="例：令和4年度の予算額が最も大きい事業を教えて"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              className="min-h-[100px] resize-none"
-              disabled={isLoading}
-            />
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-muted-foreground">
-                {query.length}/500文字
-              </span>
-              <Button
-                onClick={handleSubmit}
-                disabled={!query.trim() || isLoading}
-                className="flex items-center space-x-2"
-              >
-                {isLoading ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                ) : (
-                  <Send className="w-4 h-4" />
-                )}
-                <span>{isLoading ? "分析中..." : "クエリ実行"}</span>
-              </Button>
-            </div>
-          </div>
-
-          {/* Example Queries */}
-          <div className="space-y-2">
-            <div className="flex items-center space-x-2">
-              <Lightbulb className="w-4 h-4 text-accent" />
-              <span className="text-sm font-medium">質問例</span>
-            </div>
+            <h4 className="text-sm font-medium">質問例（クリックして使用）:</h4>
             <div className="flex flex-wrap gap-2">
-              {exampleQueries.map((example, index) => (
-                <Badge
+              {sampleQuestions.map((q, index) => (
+                <Button
                   key={index}
                   variant="outline"
-                  className="cursor-pointer hover:bg-accent hover:text-accent-foreground transition-colors"
-                  onClick={() => setQuery(example)}
+                  size="sm"
+                  className="h-auto whitespace-normal text-left justify-start"
+                  onClick={() => setQuestion(q)}
                 >
-                  {example}
-                </Badge>
+                  {q}
+                </Button>
               ))}
             </div>
           </div>
-        </CardContent>
-      </Card>
 
-      {/* Current Result */}
-      {currentResult && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center justify-between">
-              <span>クエリ結果</span>
-              <Badge
-                variant={
-                  currentResult.status === "success" ? "default" : "secondary"
-                }
-              >
-                {currentResult.status === "success"
-                  ? "成功"
-                  : currentResult.status === "error"
-                    ? "エラー"
-                    : "処理中"}
-              </Badge>
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <h4 className="font-medium mb-2">入力された質問</h4>
-              <p className="text-sm bg-muted p-3 rounded-md">
-                {currentResult.query}
-              </p>
+          {/* 質問入力 */}
+          <div className="space-y-2">
+            <Textarea
+              placeholder="分析したいことを日本語で入力してください（例：デジタル庁の支出額の合計は？）"
+              value={question}
+              onChange={(e) => setQuestion(e.target.value)}
+              rows={3}
+            />
+            <Button
+              onClick={handleSubmit}
+              disabled={isLoading || !question.trim()}
+              className="w-full"
+            >
+              {isLoading ? "AI が分析中..." : "分析実行"}
+            </Button>
+          </div>
+
+          {/* エラー表示 */}
+          {error && (
+            <div className="p-4 bg-red-50 border border-red-200 rounded-md">
+              <p className="text-red-800 text-sm">エラー: {error}</p>
             </div>
+          )}
 
-            {currentResult.sql && (
-              <div>
-                <div className="flex items-center justify-between mb-2">
-                  <h4 className="font-medium">生成されたSQL</h4>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => copySQL(currentResult.sql)}
-                    className="flex items-center space-x-1"
-                  >
-                    <Copy className="w-3 h-3" />
-                    <span>コピー</span>
-                  </Button>
-                </div>
-                <pre className="text-sm bg-muted p-3 rounded-md overflow-x-auto">
-                  <code>{currentResult.sql}</code>
+          {/* 結果表示 */}
+          {result && (
+            <div className="space-y-4">
+              <div className="flex items-center gap-2">
+                <Badge variant="outline">件数: {result.rowCount}</Badge>
+                <Badge variant="outline">実行時間: {result.executionTime}ms</Badge>
+              </div>
+
+              {/* 生成されたSQL */}
+              <div className="space-y-2">
+                <h4 className="text-sm font-medium">生成されたSQL:</h4>
+                <pre className="p-3 bg-gray-50 rounded-md text-xs overflow-x-auto">
+                  {result.generatedSQL}
                 </pre>
               </div>
-            )}
 
-            {currentResult.results && (
-              <div>
-                <h4 className="font-medium mb-2">実行結果</h4>
-                <div className="border rounded-md overflow-hidden">
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-sm">
-                      <thead className="bg-muted">
+              {/* 結果テーブル */}
+              {result.data.length > 0 && (
+                <div className="space-y-2">
+                  <h4 className="text-sm font-medium">実行結果:</h4>
+                  <div className="border rounded-md overflow-x-auto">
+                    <table className="w-full text-xs">
+                      <thead className="bg-gray-50">
                         <tr>
-                          {Object.keys(currentResult.results[0] || {}).map(
-                            (key) => (
-                              <th
-                                key={key}
-                                className="px-3 py-2 text-left font-medium"
-                              >
-                                {key}
-                              </th>
-                            ),
-                          )}
+                          {Object.keys(result.data[0]).map((key) => (
+                            <th key={key} className="p-2 text-left font-medium">
+                              {key}
+                            </th>
+                          ))}
                         </tr>
                       </thead>
                       <tbody>
-                        {currentResult.results.map((row, index) => (
+                        {result.data.slice(0, 10).map((row, index) => (
                           <tr key={index} className="border-t">
                             {Object.values(row).map((value, cellIndex) => (
-                              <td key={cellIndex} className="px-3 py-2">
-                                {String(value)}
+                              <td key={cellIndex} className="p-2">
+                                {typeof value === 'string' && value.length > 50
+                                  ? `${value.substring(0, 50)}...`
+                                  : String(value || '')}
                               </td>
                             ))}
                           </tr>
                         ))}
                       </tbody>
                     </table>
+                    {result.data.length > 10 && (
+                      <div className="p-2 text-xs text-gray-500 bg-gray-50">
+                        最初の10件を表示（全{result.rowCount}件）
+                      </div>
+                    )}
                   </div>
                 </div>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Query History */}
-      {queryHistory.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center space-x-2">
-              <History className="w-5 h-5 text-primary" />
-              <span>クエリ履歴</span>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {queryHistory.slice(0, 5).map((historyItem, index) => (
-                <div key={historyItem.id}>
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <p className="text-sm font-medium">{historyItem.query}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {historyItem.timestamp.toLocaleString("ja-JP")}
-                      </p>
-                    </div>
-                    <Badge variant="outline" className="ml-2">
-                      {historyItem.status === "success"
-                        ? "成功"
-                        : historyItem.status === "error"
-                          ? "エラー"
-                          : "処理中"}
-                    </Badge>
-                  </div>
-                  {index < queryHistory.slice(0, 5).length - 1 && (
-                    <Separator className="mt-3" />
-                  )}
-                </div>
-              ))}
+              )}
             </div>
-          </CardContent>
-        </Card>
-      )}
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }

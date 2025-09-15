@@ -47,25 +47,16 @@ export default function HomePage() {
         </div>
 
         <Tabs defaultValue="natural-language" className="w-full">
-          <TabsList className="grid w-full grid-cols-3 mb-8">
-            <TabsTrigger
-              value="natural-language"
-              className="flex items-center space-x-2"
-            >
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="natural-language" className="flex items-center space-x-2">
               <MessageSquare className="w-4 h-4" />
               <span>自然言語分析</span>
             </TabsTrigger>
-            <TabsTrigger
-              value="sql-execution"
-              className="flex items-center space-x-2"
-            >
-              <Database className="w-4 h-4" />
+            <TabsTrigger value="sql-execution" className="flex items-center space-x-2">
+              <BarChart3 className="w-4 h-4" />
               <span>SQL実行</span>
             </TabsTrigger>
-            <TabsTrigger
-              value="prompt-generation"
-              className="flex items-center space-x-2"
-            >
+            <TabsTrigger value="prompt-generation" className="flex items-center space-x-2">
               <FileText className="w-4 h-4" />
               <span>プロンプト生成</span>
             </TabsTrigger>
@@ -73,9 +64,7 @@ export default function HomePage() {
 
           <TabsContent value="natural-language">
             <NaturalLanguageQuery />
-          </TabsContent>
-
-          <TabsContent value="sql-execution">
+          </TabsContent>          <TabsContent value="sql-execution">
             <SQLExecutionPanel />
           </TabsContent>
 

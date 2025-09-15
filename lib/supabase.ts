@@ -101,40 +101,45 @@ export async function getTableSchema(tableName: string = "govis_main_data") {
 
 /**
  * SQLクエリを実行する（SELECT文のみ）
- * 注意: 現在は基本的なSELECT文のみサポート
+ * SupabaseのRPC関数を使用して動的SQLを実行
  */
 export async function executeSQLQuery(sqlQuery: string) {
   try {
+    console.log("=== SQL実行開始 ===");
+    console.log("実行クエリ:", sqlQuery);
+
     // セキュリティチェック: SELECT文のみ許可
     if (!sqlQuery.trim().toUpperCase().startsWith("SELECT")) {
       throw new Error("実行できるのはSELECT文のみです。");
     }
 
-    // 簡単なSELECT文の場合のみ実行（フルSQL実行は今後実装）
-    if (sqlQuery.includes("main_data")) {
-      const { data, error } = await supabase
-        .from("main_data")
-        .select("*")
-        .limit(10);
+    // SupabaseのRPC関数を使用して動的SQLを実行
+    const { data, error } = await supabase.rpc('execute_sql_query', {
+      query_text: sqlQuery
+    });
 
-      if (error) {
-        console.error("SQL実行エラー:", error);
-        return { success: false, error: error.message };
-      }
+    console.log("RPC実行結果:", { data, error });
 
-      return { success: true, data };
+    if (error) {
+      console.error("SQL実行エラー:", error);
+      return { success: false, error: error.message };
     }
 
-    // 他のクエリは未実装
-    return {
-      success: false,
-      error: "現在は main_data テーブルの基本SELECT文のみサポートしています"
-    };
+    // エラーが結果に含まれている場合の処理
+    if (data && typeof data === 'object' && 'error' in data) {
+      console.error("SQLエラー:", data.error);
+      return { success: false, error: data.error };
+    }
+
+    // 正常な結果を返す
+    console.log("SQL実行成功、結果件数:", Array.isArray(data) ? data.length : 0);
+    return { success: true, data: data || [] };
+
   } catch (error) {
     console.error("SQL実行中の予期せぬエラー:", error);
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Unknown error",
+      error: error instanceof Error ? error.message : "Unknown error"
     };
   }
 }
@@ -145,7 +150,7 @@ export async function executeSQLQuery(sqlQuery: string) {
 export async function testConnection() {
   try {
     const { error } = await supabase
-      .from("main_data")
+      .from("govis_main_data")
       .select("*", { count: "exact", head: true })
       .limit(1);
 
