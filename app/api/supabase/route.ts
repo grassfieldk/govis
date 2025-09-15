@@ -2,6 +2,7 @@ import { type NextRequest, NextResponse } from "next/server";
 import {
   executeSQLQuery,
   getTableSchema,
+  supabase,
   testConnection,
 } from "@/lib/supabase";
 
