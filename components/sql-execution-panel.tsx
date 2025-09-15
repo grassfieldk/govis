@@ -45,49 +45,46 @@ export function SQLExecutionPanel() {
 
   const sqlTemplates = [
     {
-      name: "基本的な事業一覧",
+      name: "全データの概要",
       query: `SELECT
-  事業名,
-  省庁名,
-  予算額,
-  執行率
-FROM administrative_reviews
-WHERE 年度 = '令和4年度'
-ORDER BY 予算額 DESC
-LIMIT 20;`,
+  COUNT(*) as 総件数,
+  COUNT(DISTINCT "政策所管府省庁") as 府省庁数,
+  COUNT(DISTINCT "事業名") as 事業数
+FROM govis_main_data;`,
     },
     {
-      name: "省庁別予算集計",
+      name: "府省庁別事業数",
       query: `SELECT
-  省庁名,
-  COUNT(*) as 事業数,
-  SUM(予算額) as 総予算額,
-  AVG(執行率) as 平均執行率
-FROM administrative_reviews
-GROUP BY 省庁名
-ORDER BY 総予算額 DESC;`,
+  "政策所管府省庁" as 府省庁名,
+  COUNT(*) as 事業数
+FROM govis_main_data
+WHERE "政策所管府省庁" IS NOT NULL AND "政策所管府省庁" != ''
+GROUP BY "政策所管府省庁"
+ORDER BY 事業数 DESC
+LIMIT 10;`,
     },
     {
-      name: "効果測定指標分析",
+      name: "支出額が設定されている事業の分析",
       query: `SELECT
-  効果測定指標,
-  COUNT(*) as 事業数,
-  AVG(予算額) as 平均予算額
-FROM administrative_reviews
-WHERE 効果測定指標 IS NOT NULL
-GROUP BY 効果測定指標
-ORDER BY 事業数 DESC;`,
+  "政策所管府省庁" as 府省庁名,
+  COUNT(*) as 件数,
+  SUM(CASE WHEN "金額" = '' OR "金額" IS NULL THEN 0 ELSE CAST("金額" AS numeric) END) as 総支出額
+FROM govis_main_data
+WHERE "金額" IS NOT NULL AND "金額" != ''
+GROUP BY "政策所管府省庁"
+ORDER BY 総支出額 DESC
+LIMIT 10;`,
     },
     {
-      name: "年度別予算推移",
+      name: "データサンプル表示",
       query: `SELECT
-  年度,
-  COUNT(*) as 事業数,
-  SUM(予算額) as 総予算額,
-  AVG(執行率) as 平均執行率
-FROM administrative_reviews
-GROUP BY 年度
-ORDER BY 年度;`,
+  "事業名",
+  "政策所管府省庁",
+  "金額",
+  "支出先ブロック名"
+FROM govis_main_data
+WHERE "事業名" IS NOT NULL AND "事業名" != ''
+LIMIT 5;`,
     },
   ];
 
@@ -119,44 +116,28 @@ ORDER BY 年度;`,
 
       const data = await response.json();
 
-      if (data.success) {
-        const results = data.result.rows.map((row: any[]) => {
-          const obj: any = {};
-          data.result.columns.forEach((col: string, index: number) => {
-            obj[col] = row[index];
-          });
-          return obj;
-        });
-
-        const updatedResult: SQLResult = {
-          ...newResult,
-          status: "success",
-          results,
-          executionTime: data.result.executionTime,
-          rowCount: data.result.rowCount,
-        };
-
-        setCurrentResult(updatedResult);
-        setQueryHistory((prev) =>
-          prev.map((q) => (q.id === newResult.id ? updatedResult : q)),
-        );
-      } else {
-        const updatedResult: SQLResult = {
-          ...newResult,
-          status: "error",
-          error: data.error || "クエリの実行中にエラーが発生しました",
-        };
-
-        setCurrentResult(updatedResult);
-        setQueryHistory((prev) =>
-          prev.map((q) => (q.id === newResult.id ? updatedResult : q)),
-        );
+      if (!response.ok || data.error) {
+        throw new Error(data.error || "SQLの実行に失敗しました");
       }
-    } catch (error) {
+
+      const updatedResult: SQLResult = {
+        ...newResult,
+        status: "success",
+        results: data.result || [],
+        executionTime: data.executionTime || 0,
+        rowCount: data.rowCount || 0,
+      };
+
+      setCurrentResult(updatedResult);
+      setQueryHistory((prev) =>
+        prev.map((q) => (q.id === newResult.id ? updatedResult : q)),
+      );
+    } catch (err) {
+      console.error("SQL実行エラー:", err);
       const updatedResult: SQLResult = {
         ...newResult,
         status: "error",
-        error: `ネットワークエラーが発生しました: ${error}`,
+        error: err instanceof Error ? err.message : "Unknown error",
       };
 
       setCurrentResult(updatedResult);
@@ -196,7 +177,7 @@ ORDER BY 年度;`,
     <div className="space-y-6">
       <Tabs defaultValue="editor" className="w-full">
         <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="editor">SQLエディター</TabsTrigger>
+          <TabsTrigger value="editor">クエリ実行</TabsTrigger>
           <TabsTrigger value="templates">クエリテンプレート</TabsTrigger>
           <TabsTrigger value="history">実行履歴</TabsTrigger>
         </TabsList>
@@ -206,10 +187,10 @@ ORDER BY 年度;`,
             <CardHeader>
               <CardTitle className="flex items-center space-x-2">
                 <Database className="w-5 h-5 text-primary" />
-                <span>SQL クエリエディター</span>
+                <span>クエリ実行</span>
               </CardTitle>
               <CardDescription>
-                PostgreSQLに対してSQLクエリを直接実行します。行政事業レビューデータを分析できます。
+                SQLクエリを直接実行します。行政事業レビューデータを分析できます。
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">

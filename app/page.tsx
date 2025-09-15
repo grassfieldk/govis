@@ -54,11 +54,11 @@ export default function HomePage() {
             </TabsTrigger>
             <TabsTrigger value="sql-execution" className="flex items-center space-x-2">
               <BarChart3 className="w-4 h-4" />
-              <span>SQL実行</span>
+              <span>クエリエディター</span>
             </TabsTrigger>
-            <TabsTrigger value="prompt-generation" className="flex items-center space-x-2">
+            <TabsTrigger value="prompt-generation" disabled className="flex items-center space-x-2 opacity-50">
               <FileText className="w-4 h-4" />
-              <span>プロンプト生成</span>
+              <span>プロンプト生成（未実装）</span>
             </TabsTrigger>
           </TabsList>
 
