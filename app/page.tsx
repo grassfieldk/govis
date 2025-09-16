@@ -96,12 +96,7 @@ const PercentageBar = ({
  */
 async function getDashboardData(): Promise<DashboardData> {
   try {
-    // 開発環境とプロダクション環境で適切なURLを使用
-    const baseUrl =
-      process.env.NEXT_PUBLIC_APP_URL || process.env.VERCEL_URL
-        ? `https://${process.env.VERCEL_URL}`
-        : "http://localhost:3000";
-
+    const baseUrl = process.env.NEXT_PUBLIC_URL;
     const response = await fetch(`${baseUrl}/api/dashboard`, {
       next: {
         revalidate: 3600, // 1時間キャッシュ
