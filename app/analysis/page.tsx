@@ -1,39 +1,64 @@
-import { BarChart3, FileText, MessageSquare } from "lucide-react";
+"use client";
+
+import { BarChart3, CheckCircle, Database, FileText, MessageSquare, X, XCircle } from "lucide-react";
 import { DatabaseConnection } from "@/components/database-connection";
-import { NaturalLanguageQuery } from "@/components/natural-language-query";
-import { PromptGeneration } from "@/components/prompt-generation";
-import { SQLExecutionPanel } from "@/components/sql-execution-panel";
+import { NaturalLanguage } from "@/components/analysis/natural-language";
+import { PromptGeneration } from "@/components/analysis/prompt-generation";
+import { UnifiedQueryEditor } from "@/components/analysis/query-editor";
 import UnifiedNavigation from "@/components/navigation";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useState } from "react";
+
+import type { ConnectionStatus } from "@/types/database";
 
 export default function AnalysisPage() {
+  const [isOpen, setIsOpen] = useState(false);
+  const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>({
+    status: "connecting",
+  });
   return (
     <div className="min-h-screen bg-background">
       {/* 統一ナビゲーション */}
       <UnifiedNavigation />
 
-      {/* メインタイトルセクション */}
-      <section className="bg-card border-b border-border">
-        <div className="container mx-auto px-4 py-6">
-          <div className="text-center">
-            <h1 className="text-3xl font-bold text-foreground mb-2">
-              🔍 行政事業レビュー分析システム
-            </h1>
-            <p className="text-muted-foreground">
-              Administrative Business Review Analysis System
-            </p>
-          </div>
-        </div>
-      </section>
-
       <main className="container mx-auto px-4 py-8">
         <div className="mb-8">
-          <h2 className="text-3xl font-bold text-foreground mb-2">
-            データ分析クエリシステム
-          </h2>
-          <p className="text-lg text-muted-foreground">
-            自然言語処理、SQL実行、プロンプト生成機能を統合したPostgreSQL連携分析ツール
+          <div className="flex items-center justify-between mb-2">
+            <h2 className="text-xl font-bold text-foreground">
+              データ分析クエリシステム
+            </h2>
+            <Button
+              variant={
+                connectionStatus.status === "connected"
+                  ? "outline"
+                  : connectionStatus.status === "connecting"
+                  ? "secondary"
+                  : "destructive"
+              }
+              size="sm"
+              onClick={() => setIsOpen(true)}
+              className="flex items-center gap-2"
+            >
+              {connectionStatus.status === "connected" ? (
+                <CheckCircle className="w-4 h-4" />
+              ) : connectionStatus.status === "connecting" ? (
+                <Database className="w-4 h-4" />
+              ) : (
+                <XCircle className="w-4 h-4" />
+              )}
+              {connectionStatus.status === "connected" ? (
+                "データベース接続済"
+              ) : connectionStatus.status === "connecting" ? (
+                "データベース接続中..."
+              ) : (
+                "接続エラー"
+              )}
+            </Button>
+          </div>
+          <p className="text-muted-foreground">
+            自然言語処理、SQL実行、プロンプト生成機能を統合した連携分析ツール
           </p>
         </div>
 
@@ -43,7 +68,7 @@ export default function AnalysisPage() {
               <MessageSquare className="w-4 h-4" />
               <span>自然言語分析</span>
             </TabsTrigger>
-            <TabsTrigger value="sql-execution" className="flex items-center space-x-2">
+            <TabsTrigger value="query-editor" className="flex items-center space-x-2">
               <BarChart3 className="w-4 h-4" />
               <span>クエリエディター</span>
             </TabsTrigger>
@@ -54,45 +79,27 @@ export default function AnalysisPage() {
           </TabsList>
 
           <TabsContent value="natural-language">
-            <NaturalLanguageQuery />
-          </TabsContent>          <TabsContent value="sql-execution">
-            <SQLExecutionPanel />
+            <NaturalLanguage />
           </TabsContent>
-
+          <TabsContent value="query-editor">
+            <UnifiedQueryEditor />
+          </TabsContent>
           <TabsContent value="prompt-generation">
             <PromptGeneration />
           </TabsContent>
         </Tabs>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
-          <DatabaseConnection />
-
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                データセット
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-2xl font-bold text-foreground">
-                行政事業レビュー
-              </p>
-              <p className="text-sm text-muted-foreground">CSV → PostgreSQL</p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                利用可能機能
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-2xl font-bold text-primary">3</p>
-              <p className="text-sm text-muted-foreground">分析ツール</p>
-            </CardContent>
-          </Card>
-        </div>
+        <Card className={`fixed inset-x-4 bottom-4 p-6 transition-all duration-200 ${
+          isOpen ? "translate-y-0 opacity-100" : "translate-y-full opacity-0 pointer-events-none"
+        }`}>
+          <div className="flex justify-between items-center mb-4">
+            <CardTitle>データベース接続設定</CardTitle>
+            <Button variant="ghost" size="icon" onClick={() => setIsOpen(false)}>
+              <X className="w-4 h-4" />
+            </Button>
+          </div>
+          <DatabaseConnection onStatusChange={setConnectionStatus} />
+        </Card>
       </main>
     </div>
   );

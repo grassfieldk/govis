@@ -15,7 +15,7 @@ interface QueryResult {
   generatedSQL: string;
 }
 
-export function NaturalLanguageQuery() {
+export function NaturalLanguage() {
   // 初期値は空で、useEffectでLocalStorageから読み込み
   const [question, setQuestion] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -138,7 +138,7 @@ export function NaturalLanguageQuery() {
         <CardContent className="space-y-4">
           {/* サンプル質問 */}
           <div className="space-y-2">
-            <h4 className="text-sm font-medium">質問例（クリックして使用）:</h4>
+            <h4 className="text-sm font-medium">質問例（クリックして使用）</h4>
             <div className="flex flex-wrap gap-2">
               {sampleQuestions.map((q, index) => (
                 <Button
@@ -188,7 +188,7 @@ export function NaturalLanguageQuery() {
 
               {/* 生成されたSQL */}
               <div className="space-y-2">
-                <h4 className="text-sm font-medium">生成されたSQL:</h4>
+                <h4 className="text-sm font-medium">生成されたSQL</h4>
                 <div className="border rounded-md overflow-hidden">
                   <Editor
                     height="120px"
@@ -221,7 +221,7 @@ export function NaturalLanguageQuery() {
               {result.data.length > 0 && (
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
-                    <h4 className="text-sm font-medium">実行結果:</h4>
+                    <h4 className="text-sm font-medium">実行結果</h4>
                     {result.data.length > 10 && (
                       <div className="flex items-center space-x-2">
                         <span className="text-xs text-muted-foreground">

@@ -12,29 +12,26 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
-interface ConnectionStatus {
-  status: "connected" | "disconnected" | "connecting";
-  database?: string;
-  tables?: string[];
-  version?: string;
-  error?: string;
-  schemaInfo?: {
-    exists: boolean;
-    columnCount: number;
-    sampleCount: number;
-    error?: string;
-  };
+import type { ConnectionStatus } from "@/types/database";
+
+interface DatabaseConnectionProps {
+  onStatusChange?: (status: ConnectionStatus) => void;
 }
 
-export function DatabaseConnection() {
+export function DatabaseConnection({ onStatusChange }: DatabaseConnectionProps) {
   const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>({
     status: "connecting",
   });
   const [isRefreshing, setIsRefreshing] = useState(false);
 
+  const updateStatus = useCallback((status: ConnectionStatus) => {
+    setConnectionStatus(status);
+    onStatusChange?.(status);
+  }, [onStatusChange]);
+
   const checkConnection = useCallback(async () => {
     setIsRefreshing(true);
-    setConnectionStatus({ status: "connecting" });
+    updateStatus({ status: "connecting" });
 
     try {
       // 1. 接続テスト
@@ -46,7 +43,7 @@ export function DatabaseConnection() {
       const connectionData = await connectionResponse.json();
 
       if (!connectionData.success) {
-        setConnectionStatus({
+        updateStatus({
           status: "disconnected",
           error: connectionData.error,
         });
@@ -61,7 +58,7 @@ export function DatabaseConnection() {
       });
       const schemaData = await schemaResponse.json();
 
-      setConnectionStatus({
+      updateStatus({
         status: "connected",
         database: "Supabase PostgreSQL",
         tables: ["govis_main_data"],
@@ -75,14 +72,14 @@ export function DatabaseConnection() {
       });
 
     } catch (error) {
-      setConnectionStatus({
+      updateStatus({
         status: "disconnected",
         error: `ネットワークエラーが発生しました: ${error}`,
       });
     } finally {
       setIsRefreshing(false);
     }
-  }, []);
+  }, [updateStatus]);
 
   useEffect(() => {
     checkConnection();
@@ -102,7 +99,7 @@ export function DatabaseConnection() {
   const getStatusBadge = () => {
     switch (connectionStatus.status) {
       case "connected":
-        return <Badge className="bg-green-500">接続済み</Badge>;
+        return <Badge className="bg-green-500">接続済</Badge>;
       case "disconnected":
         return <Badge variant="destructive">未接続</Badge>;
       case "connecting":
@@ -116,7 +113,7 @@ export function DatabaseConnection() {
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center space-x-2">
             <Database className="w-5 h-5 text-primary" />
-            <span>PostgreSQL接続状態</span>
+            <span>データベース接続状態</span>
           </CardTitle>
           <Button
             variant="outline"
@@ -150,17 +147,13 @@ export function DatabaseConnection() {
               <span className="text-muted-foreground">バージョン:</span>
               <span className="font-mono">{connectionStatus.version}</span>
             </div>
-            <div className="space-y-1">
-              <span className="text-sm text-muted-foreground">
-                利用可能テーブル:
-              </span>
-              <div className="flex flex-wrap gap-1">
-                {connectionStatus.tables?.map((table) => (
+            <div className="flex justify-between text-sm">
+              <span className="text-muted-foreground">利用可能テーブル:</span>
+              <span className="font-mono">                {connectionStatus.tables?.map((table) => (
                   <Badge key={table} variant="outline" className="text-xs">
                     {table}
                   </Badge>
-                ))}
-              </div>
+                ))}</span>
             </div>
 
             {/* スキーマ情報表示 */}
@@ -168,12 +161,6 @@ export function DatabaseConnection() {
               <div className="mt-4 p-3 bg-muted/30 rounded-lg">
                 <h4 className="text-sm font-medium mb-2">スキーマ情報</h4>
                 <div className="space-y-1 text-xs">
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">テーブル存在:</span>
-                    <Badge variant={connectionStatus.schemaInfo.exists ? "default" : "destructive"} className="text-xs">
-                      {connectionStatus.schemaInfo.exists ? "あり" : "なし"}
-                    </Badge>
-                  </div>
                   {connectionStatus.schemaInfo.exists && (
                     <>
                       <div className="flex justify-between">

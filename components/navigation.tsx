@@ -50,7 +50,7 @@ export default function UnifiedNavigation() {
               </Button>
             </Link>
 
-            {/* 分析パネル */}
+            {/* データ分析 */}
             <Link href="/analysis">
               <Button
                 variant={pathname === '/analysis' ? 'default' : 'ghost'}
@@ -58,7 +58,7 @@ export default function UnifiedNavigation() {
                 className="hidden sm:flex"
               >
                 <BarChart3 className="w-4 h-4 mr-2" />
-                分析パネル
+                データ分析
               </Button>
               <Button
                 variant={pathname === '/analysis' ? 'default' : 'ghost'}
