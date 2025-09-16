@@ -1,45 +1,31 @@
-import Link from "next/link";
-import { BarChart3, Database, FileText, MessageSquare } from "lucide-react";
+import { BarChart3, FileText, MessageSquare } from "lucide-react";
 import { DatabaseConnection } from "@/components/database-connection";
 import { NaturalLanguageQuery } from "@/components/natural-language-query";
 import { PromptGeneration } from "@/components/prompt-generation";
 import { SQLExecutionPanel } from "@/components/sql-execution-panel";
-import { ThemeToggle } from "@/components/theme-toggle";
-import { Button } from "@/components/ui/button";
+import UnifiedNavigation from "@/components/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default function AnalysisPage() {
   return (
     <div className="min-h-screen bg-background">
-      <header className="border-b border-border bg-card">
+      {/* 統一ナビゲーション */}
+      <UnifiedNavigation />
+
+      {/* メインタイトルセクション */}
+      <section className="bg-card border-b border-border">
         <div className="container mx-auto px-4 py-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <div className="flex items-center justify-center w-10 h-10 bg-primary rounded-lg">
-                <Database className="w-6 h-6 text-primary-foreground" />
-              </div>
-              <div>
-                <h1 className="text-2xl font-bold text-foreground">
-                  行政事業レビュー分析システム
-                </h1>
-                <p className="text-sm text-muted-foreground">
-                  Administrative Business Review Analysis System
-                </p>
-              </div>
-            </div>
-            <div className="flex items-center space-x-2">
-              <ThemeToggle />
-              <Link href="/">
-                <Button variant="outline" size="sm">
-                  <BarChart3 className="w-4 h-4 mr-2" />
-                  ダッシュボード
-                </Button>
-              </Link>
-            </div>
+          <div className="text-center">
+            <h1 className="text-3xl font-bold text-foreground mb-2">
+              🔍 行政事業レビュー分析システム
+            </h1>
+            <p className="text-muted-foreground">
+              Administrative Business Review Analysis System
+            </p>
           </div>
         </div>
-      </header>
+      </section>
 
       <main className="container mx-auto px-4 py-8">
         <div className="mb-8">
