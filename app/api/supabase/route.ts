@@ -36,40 +36,39 @@ export async function POST(request: NextRequest) {
       case "list_tables":
         try {
           // information_schemaを利用してテーブル一覧を取得
-          const { data: tables, error: listError } = await supabase
-            .rpc('get_tables_list');
+          const { data: tables, error: listError } =
+            await supabase.rpc("get_tables_list");
 
           if (listError) {
             // 代替手段：直接SQLクエリを実行
             const { data: directQuery, error: directError } = await supabase
-              .from('information_schema.tables')
-              .select('table_name')
-              .eq('table_schema', 'public');
+              .from("information_schema.tables")
+              .select("table_name")
+              .eq("table_schema", "public");
 
             if (directError) {
               return NextResponse.json({
                 success: false,
                 error: `テーブル一覧取得失敗: ${directError.message}`,
-                tables: []
+                tables: [],
               });
             }
 
             return NextResponse.json({
               success: true,
-              tables: directQuery?.map(t => t.table_name) || []
+              tables: directQuery?.map((t) => t.table_name) || [],
             });
           }
 
           return NextResponse.json({
             success: true,
-            tables: tables || []
+            tables: tables || [],
           });
-
         } catch (error) {
           return NextResponse.json({
             success: false,
             error: `テーブル一覧取得エラー: ${error}`,
-            tables: []
+            tables: [],
           });
         }
 
@@ -79,7 +78,10 @@ export async function POST(request: NextRequest) {
           console.log(`スキーマ情報取得開始: テーブル名=${tableName}`);
 
           const schemaInfo = await getTableSchema(tableName);
-          console.log("スキーマ情報取得結果:", JSON.stringify(schemaInfo, null, 2));
+          console.log(
+            "スキーマ情報取得結果:",
+            JSON.stringify(schemaInfo, null, 2),
+          );
 
           return NextResponse.json(schemaInfo);
         } catch (error) {
@@ -89,9 +91,10 @@ export async function POST(request: NextRequest) {
             error: `スキーマ取得エラー: ${error}`,
             exists: false,
             columns: [],
-            sampleCount: 0
+            sampleCount: 0,
           });
-        }      case "test": {
+        }
+      case "test": {
         const connectionTest = await testConnection();
         return NextResponse.json(connectionTest);
       }

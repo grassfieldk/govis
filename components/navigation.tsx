@@ -1,10 +1,10 @@
-'use client';
+"use client";
 
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { Button } from '@/components/ui/button';
-import { ThemeToggle } from '@/components/theme-toggle';
-import { BarChart3, Database, Home } from 'lucide-react';
+import { BarChart3, Database, Home } from "lucide-react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { ThemeToggle } from "@/components/theme-toggle";
+import { Button } from "@/components/ui/button";
 
 /**
  * サイト全体で使用する統一ナビゲーションヘッダー
@@ -18,11 +18,12 @@ export default function UnifiedNavigation() {
       <div className="container mx-auto px-4 py-3">
         <div className="flex items-center justify-between">
           {/* 左側: ブランディング */}
-          <Link href="/" className="flex items-center space-x-3 hover:opacity-80 transition-opacity">
+          <Link
+            href="/"
+            className="flex items-center space-x-3 hover:opacity-80 transition-opacity"
+          >
             <div>
-              <h1 className="text-2xl font-bold text-foreground">
-                GOVIS
-              </h1>
+              <h1 className="text-2xl font-bold text-foreground">GOVIS</h1>
               <p className="text-xs text-muted-foreground hidden sm:block leading-tight">
                 Government Visualization
               </p>
@@ -34,7 +35,7 @@ export default function UnifiedNavigation() {
             {/* ダッシュボード */}
             <Link href="/">
               <Button
-                variant={pathname === '/' ? 'default' : 'ghost'}
+                variant={pathname === "/" ? "default" : "ghost"}
                 size="sm"
                 className="hidden sm:flex"
               >
@@ -42,7 +43,7 @@ export default function UnifiedNavigation() {
                 ダッシュボード
               </Button>
               <Button
-                variant={pathname === '/' ? 'default' : 'ghost'}
+                variant={pathname === "/" ? "default" : "ghost"}
                 size="sm"
                 className="sm:hidden p-2"
               >
@@ -53,7 +54,7 @@ export default function UnifiedNavigation() {
             {/* データ分析 */}
             <Link href="/analysis">
               <Button
-                variant={pathname === '/analysis' ? 'default' : 'ghost'}
+                variant={pathname === "/analysis" ? "default" : "ghost"}
                 size="sm"
                 className="hidden sm:flex"
               >
@@ -61,7 +62,7 @@ export default function UnifiedNavigation() {
                 データ分析
               </Button>
               <Button
-                variant={pathname === '/analysis' ? 'default' : 'ghost'}
+                variant={pathname === "/analysis" ? "default" : "ghost"}
                 size="sm"
                 className="sm:hidden p-2"
               >

@@ -1,8 +1,10 @@
 "use client";
 
-import Editor from '@monaco-editor/react';
+import Editor from "@monaco-editor/react";
 import {
   CheckCircle,
+  ChevronDown,
+  ChevronRight,
   Clock,
   Copy,
   Database,
@@ -12,11 +14,9 @@ import {
   Loader2,
   Play,
   XCircle,
-  ChevronDown,
-  ChevronRight,
 } from "lucide-react";
-import { useState, useEffect } from "react";
 import { useTheme } from "next-themes";
+import { useEffect, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -49,7 +49,9 @@ export function UnifiedQueryEditor() {
   const [isClient, setIsClient] = useState(false);
   const [showAllRows, setShowAllRows] = useState(false);
   const [displayLimit, setDisplayLimit] = useState(historySize);
-  const [expandedHistoryItems, setExpandedHistoryItems] = useState<Set<string>>(new Set());
+  const [expandedHistoryItems, setExpandedHistoryItems] = useState<Set<string>>(
+    new Set(),
+  );
   const { theme } = useTheme();
 
   // クライアントサイドでのみLocalStorageから読み込み
@@ -57,29 +59,31 @@ export function UnifiedQueryEditor() {
     setIsClient(true);
 
     // SQLクエリを復元
-    const savedQuery = localStorage.getItem('sql-query');
+    const savedQuery = localStorage.getItem("sql-query");
     if (savedQuery) {
       setSqlQuery(savedQuery);
     }
 
     // クエリ履歴を復元
-    const savedHistory = localStorage.getItem('sql-query-history');
+    const savedHistory = localStorage.getItem("sql-query-history");
     if (savedHistory) {
       const parsed = JSON.parse(savedHistory);
-      const restored = parsed.map((item: SQLResult & { timestamp: string }) => ({
-        ...item,
-        timestamp: new Date(item.timestamp)
-      }));
+      const restored = parsed.map(
+        (item: SQLResult & { timestamp: string }) => ({
+          ...item,
+          timestamp: new Date(item.timestamp),
+        }),
+      );
       setQueryHistory(restored);
     }
 
     // 現在の結果を復元
-    const savedResult = localStorage.getItem('sql-current-result');
+    const savedResult = localStorage.getItem("sql-current-result");
     if (savedResult) {
       const parsed = JSON.parse(savedResult);
       setCurrentResult({
         ...parsed,
-        timestamp: new Date(parsed.timestamp)
+        timestamp: new Date(parsed.timestamp),
       });
     }
   }, []);
@@ -87,14 +91,14 @@ export function UnifiedQueryEditor() {
   // SQLクエリの変更をLocalStorageに保存
   useEffect(() => {
     if (isClient) {
-      localStorage.setItem('sql-query', sqlQuery);
+      localStorage.setItem("sql-query", sqlQuery);
     }
   }, [sqlQuery, isClient]);
 
   // クエリ履歴の変更をLocalStorageに保存
   useEffect(() => {
     if (isClient) {
-      localStorage.setItem('sql-query-history', JSON.stringify(queryHistory));
+      localStorage.setItem("sql-query-history", JSON.stringify(queryHistory));
     }
   }, [queryHistory, isClient]);
 
@@ -102,9 +106,12 @@ export function UnifiedQueryEditor() {
   useEffect(() => {
     if (isClient) {
       if (currentResult) {
-        localStorage.setItem('sql-current-result', JSON.stringify(currentResult));
+        localStorage.setItem(
+          "sql-current-result",
+          JSON.stringify(currentResult),
+        );
       } else {
-        localStorage.removeItem('sql-current-result');
+        localStorage.removeItem("sql-current-result");
       }
     }
   }, [currentResult, isClient]);
@@ -200,7 +207,9 @@ LIMIT 5;`,
 
       setCurrentResult(updatedResult);
       setQueryHistory((prev) =>
-        prev.map((q) => (q.id === newResult.id ? updatedResult : q)).slice(0, 10),
+        prev
+          .map((q) => (q.id === newResult.id ? updatedResult : q))
+          .slice(0, 10),
       );
     } catch (err) {
       console.error("SQL実行エラー:", err);
@@ -212,7 +221,9 @@ LIMIT 5;`,
 
       setCurrentResult(updatedResult);
       setQueryHistory((prev) =>
-        prev.map((q) => (q.id === newResult.id ? updatedResult : q)).slice(0, 10),
+        prev
+          .map((q) => (q.id === newResult.id ? updatedResult : q))
+          .slice(0, 10),
       );
     } finally {
       setIsExecuting(false);
@@ -230,11 +241,11 @@ LIMIT 5;`,
   const formatDateTime = () => {
     const now = new Date();
     const year = now.getFullYear();
-    const month = String(now.getMonth() + 1).padStart(2, '0');
-    const day = String(now.getDate()).padStart(2, '0');
-    const hours = String(now.getHours()).padStart(2, '0');
-    const minutes = String(now.getMinutes()).padStart(2, '0');
-    const seconds = String(now.getSeconds()).padStart(2, '0');
+    const month = String(now.getMonth() + 1).padStart(2, "0");
+    const day = String(now.getDate()).padStart(2, "0");
+    const hours = String(now.getHours()).padStart(2, "0");
+    const minutes = String(now.getMinutes()).padStart(2, "0");
+    const seconds = String(now.getSeconds()).padStart(2, "0");
     return `${year}${month}${day}_${hours}${minutes}_${seconds}`;
   };
 
@@ -256,9 +267,9 @@ LIMIT 5;`,
 
   const exportSQLQuery = (query: string) => {
     const datetime = formatDateTime();
-    const blob = new Blob([query], { type: 'text/plain;charset=utf-8' });
+    const blob = new Blob([query], { type: "text/plain;charset=utf-8" });
     const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
+    const a = document.createElement("a");
     a.href = url;
     a.download = `query_${datetime}.sql`;
     document.body.appendChild(a);
@@ -275,22 +286,29 @@ LIMIT 5;`,
     const datetime = formatDateTime();
     const headers = Object.keys(historyItem.results[0]);
     const csvContent = [
-      headers.join(','),
-      ...historyItem.results.map(row =>
-        headers.map(header => {
-          const value = row[header];
-          // 値にカンマやダブルクォートが含まれている場合はエスケープ
-          if (typeof value === 'string' && (value.includes(',') || value.includes('"') || value.includes('\n'))) {
-            return `"${value.replace(/"/g, '""')}"`;
-          }
-          return value;
-        }).join(',')
-      )
-    ].join('\n');
+      headers.join(","),
+      ...historyItem.results.map((row) =>
+        headers
+          .map((header) => {
+            const value = row[header];
+            // 値にカンマやダブルクォートが含まれている場合はエスケープ
+            if (
+              typeof value === "string" &&
+              (value.includes(",") ||
+                value.includes('"') ||
+                value.includes("\n"))
+            ) {
+              return `"${value.replace(/"/g, '""')}"`;
+            }
+            return value;
+          })
+          .join(","),
+      ),
+    ].join("\n");
 
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8' });
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8" });
     const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
+    const a = document.createElement("a");
     a.href = url;
     a.download = `results_${datetime}.csv`;
     document.body.appendChild(a);
@@ -300,7 +318,7 @@ LIMIT 5;`,
   };
 
   const toggleHistoryExpansion = (itemId: string) => {
-    setExpandedHistoryItems(prev => {
+    setExpandedHistoryItems((prev) => {
       const newSet = new Set(prev);
       if (newSet.has(itemId)) {
         newSet.delete(itemId);
@@ -337,7 +355,8 @@ LIMIT 5;`,
                     minimap: { enabled: false },
                     scrollBeyondLastLine: false,
                     fontSize: 14,
-                    fontFamily: 'Monaco, "Cascadia Code", "Roboto Mono", monospace',
+                    fontFamily:
+                      'Monaco, "Cascadia Code", "Roboto Mono", monospace',
                     lineNumbers: "on",
                     wordWrap: "on",
                     automaticLayout: true,
@@ -438,8 +457,9 @@ LIMIT 5;`,
                   {currentResult.status === "success" ? "成功" : "エラー"}
                 </Badge>
                 {currentResult.executionTime && (
-                  <p className='text-muted-foreground text-sm'>
-                    {currentResult.executionTime.toFixed(0)}ms | {currentResult.rowCount}行
+                  <p className="text-muted-foreground text-sm">
+                    {currentResult.executionTime.toFixed(0)}ms |{" "}
+                    {currentResult.rowCount}行
                   </p>
                 )}
               </CardTitle>
@@ -473,7 +493,9 @@ LIMIT 5;`,
                 {currentResult.results.length > 10 && (
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-2">
-                      <span className="text-xs text-muted-foreground">表示件数:</span>
+                      <span className="text-xs text-muted-foreground">
+                        表示件数:
+                      </span>
                       <select
                         value={showAllRows ? "all" : displayLimit}
                         onChange={(e) => {
@@ -490,7 +512,9 @@ LIMIT 5;`,
                         <option value={10}>10件</option>
                         <option value={50}>50件</option>
                         <option value={100}>100件</option>
-                        <option value="all">全件（{currentResult.rowCount}件）</option>
+                        <option value="all">
+                          全件（{currentResult.rowCount}件）
+                        </option>
                       </select>
                     </div>
                   </div>
@@ -513,10 +537,19 @@ LIMIT 5;`,
                         </tr>
                       </thead>
                       <tbody>
-                        {(showAllRows ? currentResult.results : currentResult.results.slice(0, displayLimit)).map((row, rowIndex) => (
-                          <tr key={`row-${rowIndex}`} className="border-t border-border hover:bg-muted/50">
+                        {(showAllRows
+                          ? currentResult.results
+                          : currentResult.results.slice(0, displayLimit)
+                        ).map((row, rowIndex) => (
+                          <tr
+                            key={`row-${rowIndex}`}
+                            className="border-t border-border hover:bg-muted/50"
+                          >
                             {Object.values(row).map((value, cellIndex) => (
-                              <td key={`cell-${rowIndex}-${cellIndex}`} className="px-3 py-2">
+                              <td
+                                key={`cell-${rowIndex}-${cellIndex}`}
+                                className="px-3 py-2"
+                              >
                                 {String(value)}
                               </td>
                             ))}
@@ -527,8 +560,7 @@ LIMIT 5;`,
                     <div className="p-2 text-xs text-muted-foreground bg-muted">
                       {showAllRows
                         ? `全${currentResult.rowCount}件を表示中`
-                        : `${Math.min(displayLimit, currentResult.results.length)}件を表示中（全${currentResult.rowCount}件）`
-                      }
+                        : `${Math.min(displayLimit, currentResult.results.length)}件を表示中（全${currentResult.rowCount}件）`}
                     </div>
                   </div>
                 </div>
@@ -602,7 +634,9 @@ LIMIT 5;`,
                               <Button
                                 variant="ghost"
                                 size="sm"
-                                onClick={() => toggleHistoryExpansion(historyItem.id)}
+                                onClick={() =>
+                                  toggleHistoryExpansion(historyItem.id)
+                                }
                                 className="flex items-center space-x-1 -ml-2"
                               >
                                 {isExpanded ? (
@@ -628,7 +662,9 @@ LIMIT 5;`,
                               <Button
                                 variant="outline"
                                 size="sm"
-                                onClick={() => exportSQLQuery(historyItem.query)}
+                                onClick={() =>
+                                  exportSQLQuery(historyItem.query)
+                                }
                                 className="flex items-center space-x-1 text-xs"
                               >
                                 <FileText className="w-3 h-3" />
@@ -637,7 +673,9 @@ LIMIT 5;`,
                               <Button
                                 variant="outline"
                                 size="sm"
-                                onClick={() => exportHistoryResults(historyItem)}
+                                onClick={() =>
+                                  exportHistoryResults(historyItem)
+                                }
                                 className="flex items-center space-x-1 text-xs"
                               >
                                 <Download className="w-3 h-3" />
@@ -652,28 +690,44 @@ LIMIT 5;`,
                               <table className="w-full text-xs">
                                 <thead className="bg-muted sticky top-0">
                                   <tr>
-                                    {Object.keys(historyItem.results[0]).map((header) => (
-                                      <th key={header} className="text-left p-2 font-medium border-r border-border last:border-r-0">
-                                        {header}
-                                      </th>
-                                    ))}
+                                    {Object.keys(historyItem.results[0]).map(
+                                      (header) => (
+                                        <th
+                                          key={header}
+                                          className="text-left p-2 font-medium border-r border-border last:border-r-0"
+                                        >
+                                          {header}
+                                        </th>
+                                      ),
+                                    )}
                                   </tr>
                                 </thead>
                                 <tbody>
-                                  {historyItem.results.slice(0, 5).map((row, rowIndex) => (
-                                    <tr key={`history-${historyItem.id}-row-${rowIndex}`} className="border-t border-border hover:bg-muted/50">
-                                      {Object.values(row).map((cell, cellIndex) => (
-                                        <td key={`history-${historyItem.id}-cell-${rowIndex}-${cellIndex}`} className="px-2 py-1 border-r border-border last:border-r-0">
-                                          {String(cell)}
-                                        </td>
-                                      ))}
-                                    </tr>
-                                  ))}
+                                  {historyItem.results
+                                    .slice(0, 5)
+                                    .map((row, rowIndex) => (
+                                      <tr
+                                        key={`history-${historyItem.id}-row-${rowIndex}`}
+                                        className="border-t border-border hover:bg-muted/50"
+                                      >
+                                        {Object.values(row).map(
+                                          (cell, cellIndex) => (
+                                            <td
+                                              key={`history-${historyItem.id}-cell-${rowIndex}-${cellIndex}`}
+                                              className="px-2 py-1 border-r border-border last:border-r-0"
+                                            >
+                                              {String(cell)}
+                                            </td>
+                                          ),
+                                        )}
+                                      </tr>
+                                    ))}
                                 </tbody>
                               </table>
                               {historyItem.results.length > 5 && (
                                 <div className="p-2 text-xs text-muted-foreground text-center bg-muted/50">
-                                  ... 他 {historyItem.results.length - 5} 行（完全な結果を見るにはCSVをダウンロード）
+                                  ... 他 {historyItem.results.length - 5}{" "}
+                                  行（完全な結果を見るにはCSVをダウンロード）
                                 </div>
                               )}
                             </div>
@@ -682,9 +736,8 @@ LIMIT 5;`,
                       </div>
                     )}
 
-                    {queryHistory.indexOf(historyItem) < queryHistory.length - 1 && (
-                      <Separator className="my-3" />
-                    )}
+                    {queryHistory.indexOf(historyItem) <
+                      queryHistory.length - 1 && <Separator className="my-3" />}
                   </div>
                 );
               })}

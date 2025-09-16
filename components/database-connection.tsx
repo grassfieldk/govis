@@ -18,16 +18,21 @@ interface DatabaseConnectionProps {
   onStatusChange?: (status: ConnectionStatus) => void;
 }
 
-export function DatabaseConnection({ onStatusChange }: DatabaseConnectionProps) {
+export function DatabaseConnection({
+  onStatusChange,
+}: DatabaseConnectionProps) {
   const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>({
     status: "connecting",
   });
   const [isRefreshing, setIsRefreshing] = useState(false);
 
-  const updateStatus = useCallback((status: ConnectionStatus) => {
-    setConnectionStatus(status);
-    onStatusChange?.(status);
-  }, [onStatusChange]);
+  const updateStatus = useCallback(
+    (status: ConnectionStatus) => {
+      setConnectionStatus(status);
+      onStatusChange?.(status);
+    },
+    [onStatusChange],
+  );
 
   const checkConnection = useCallback(async () => {
     setIsRefreshing(true);
@@ -67,10 +72,9 @@ export function DatabaseConnection({ onStatusChange }: DatabaseConnectionProps) 
           exists: schemaData.exists || false,
           columnCount: schemaData.columns?.length || 0,
           sampleCount: schemaData.sampleCount || 0,
-          error: schemaData.error
-        }
+          error: schemaData.error,
+        },
       });
-
     } catch (error) {
       updateStatus({
         status: "disconnected",
@@ -149,11 +153,14 @@ export function DatabaseConnection({ onStatusChange }: DatabaseConnectionProps) 
             </div>
             <div className="flex justify-between text-sm">
               <span className="text-muted-foreground">利用可能テーブル:</span>
-              <span className="font-mono">                {connectionStatus.tables?.map((table) => (
+              <span className="font-mono">
+                {" "}
+                {connectionStatus.tables?.map((table) => (
                   <Badge key={table} variant="outline" className="text-xs">
                     {table}
                   </Badge>
-                ))}</span>
+                ))}
+              </span>
             </div>
 
             {/* スキーマ情報表示 */}
@@ -165,11 +172,17 @@ export function DatabaseConnection({ onStatusChange }: DatabaseConnectionProps) 
                     <>
                       <div className="flex justify-between">
                         <span className="text-muted-foreground">カラム数:</span>
-                        <span className="font-mono">{connectionStatus.schemaInfo.columnCount}</span>
+                        <span className="font-mono">
+                          {connectionStatus.schemaInfo.columnCount}
+                        </span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-muted-foreground">データ件数:</span>
-                        <span className="font-mono">{connectionStatus.schemaInfo.sampleCount.toLocaleString()}</span>
+                        <span className="text-muted-foreground">
+                          データ件数:
+                        </span>
+                        <span className="font-mono">
+                          {connectionStatus.schemaInfo.sampleCount.toLocaleString()}
+                        </span>
                       </div>
                     </>
                   )}

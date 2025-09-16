@@ -1,15 +1,23 @@
 "use client";
 
-import { BarChart3, CheckCircle, Database, FileText, MessageSquare, X, XCircle } from "lucide-react";
-import { DatabaseConnection } from "@/components/database-connection";
+import {
+  BarChart3,
+  CheckCircle,
+  Database,
+  FileText,
+  MessageSquare,
+  X,
+  XCircle,
+} from "lucide-react";
+import { useState } from "react";
 import { NaturalLanguage } from "@/components/analysis/natural-language";
 import { PromptGeneration } from "@/components/analysis/prompt-generation";
 import { UnifiedQueryEditor } from "@/components/analysis/query-editor";
+import { DatabaseConnection } from "@/components/database-connection";
 import UnifiedNavigation from "@/components/navigation";
-import { Card, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Card, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useState } from "react";
 
 import type { ConnectionStatus } from "@/types/database";
 
@@ -34,8 +42,8 @@ export default function AnalysisPage() {
                 connectionStatus.status === "connected"
                   ? "outline"
                   : connectionStatus.status === "connecting"
-                  ? "secondary"
-                  : "destructive"
+                    ? "secondary"
+                    : "destructive"
               }
               size="sm"
               onClick={() => setIsOpen(true)}
@@ -48,13 +56,11 @@ export default function AnalysisPage() {
               ) : (
                 <XCircle className="w-4 h-4" />
               )}
-              {connectionStatus.status === "connected" ? (
-                "データベース接続済"
-              ) : connectionStatus.status === "connecting" ? (
-                "データベース接続中..."
-              ) : (
-                "接続エラー"
-              )}
+              {connectionStatus.status === "connected"
+                ? "データベース接続済"
+                : connectionStatus.status === "connecting"
+                  ? "データベース接続中..."
+                  : "接続エラー"}
             </Button>
           </div>
           <p className="text-muted-foreground">
@@ -64,15 +70,25 @@ export default function AnalysisPage() {
 
         <Tabs defaultValue="natural-language" className="w-full">
           <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="natural-language" className="flex items-center space-x-2">
+            <TabsTrigger
+              value="natural-language"
+              className="flex items-center space-x-2"
+            >
               <MessageSquare className="w-4 h-4" />
               <span>自然言語分析</span>
             </TabsTrigger>
-            <TabsTrigger value="query-editor" className="flex items-center space-x-2">
+            <TabsTrigger
+              value="query-editor"
+              className="flex items-center space-x-2"
+            >
               <BarChart3 className="w-4 h-4" />
               <span>クエリエディター</span>
             </TabsTrigger>
-            <TabsTrigger value="prompt-generation" disabled className="flex items-center space-x-2 opacity-50">
+            <TabsTrigger
+              value="prompt-generation"
+              disabled
+              className="flex items-center space-x-2 opacity-50"
+            >
               <FileText className="w-4 h-4" />
               <span>プロンプト生成（未実装）</span>
             </TabsTrigger>
@@ -89,12 +105,20 @@ export default function AnalysisPage() {
           </TabsContent>
         </Tabs>
 
-        <Card className={`fixed inset-x-4 bottom-4 p-6 transition-all duration-200 ${
-          isOpen ? "translate-y-0 opacity-100" : "translate-y-full opacity-0 pointer-events-none"
-        }`}>
+        <Card
+          className={`fixed inset-x-4 bottom-4 p-6 transition-all duration-200 ${
+            isOpen
+              ? "translate-y-0 opacity-100"
+              : "translate-y-full opacity-0 pointer-events-none"
+          }`}
+        >
           <div className="flex justify-between items-center mb-4">
             <CardTitle>データベース接続設定</CardTitle>
-            <Button variant="ghost" size="icon" onClick={() => setIsOpen(false)}>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setIsOpen(false)}
+            >
               <X className="w-4 h-4" />
             </Button>
           </div>

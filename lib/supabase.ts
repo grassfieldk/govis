@@ -21,10 +21,7 @@ export async function getTableSchema(tableName: string = "govis_main_data") {
 
     // Supabaseでは直接SQLクエリを実行するためのRPC関数が必要
     // まずは簡易版として、テーブルの存在確認とサンプルデータから推測
-    const { data, error } = await supabase
-      .from(tableName)
-      .select("*")
-      .limit(1);
+    const { data, error } = await supabase.from(tableName).select("*").limit(1);
 
     console.log("サンプルデータクエリ結果:", { data, error });
 
@@ -32,20 +29,24 @@ export async function getTableSchema(tableName: string = "govis_main_data") {
       console.error("スキーマ取得エラー:", error);
 
       // テーブルが存在しない場合のエラーハンドリング
-      if (error.code === "PGRST106" || error.message.includes("relation") || error.message.includes("does not exist")) {
-      return {
-        error: `テーブル "${tableName}" が存在しません。Supabaseにデータをインポートしてください。`,
-        exists: false,
-        columns: [],
-        sampleCount: 0
-      };
+      if (
+        error.code === "PGRST106" ||
+        error.message.includes("relation") ||
+        error.message.includes("does not exist")
+      ) {
+        return {
+          error: `テーブル "${tableName}" が存在しません。Supabaseにデータをインポートしてください。`,
+          exists: false,
+          columns: [],
+          sampleCount: 0,
+        };
       }
 
       return {
         error: `スキーマ取得に失敗しました: ${error.message}`,
         exists: false,
         columns: [],
-        sampleCount: 0
+        sampleCount: 0,
       };
     }
 
@@ -53,9 +54,9 @@ export async function getTableSchema(tableName: string = "govis_main_data") {
     if (data && data.length > 0) {
       console.log("サンプルデータあり:", data[0]);
 
-      const columns = Object.keys(data[0]).map(key => ({
+      const columns = Object.keys(data[0]).map((key) => ({
         column_name: key,
-        data_type: typeof data[0][key] === 'number' ? 'numeric' : 'text'
+        data_type: typeof data[0][key] === "number" ? "numeric" : "text",
       }));
 
       console.log("カラム情報:", columns);
@@ -75,7 +76,7 @@ export async function getTableSchema(tableName: string = "govis_main_data") {
       return {
         columns,
         exists: true,
-        sampleCount: count || 0
+        sampleCount: count || 0,
       };
     }
 
@@ -85,16 +86,16 @@ export async function getTableSchema(tableName: string = "govis_main_data") {
       columns: [],
       exists: true,
       sampleCount: 0,
-      error: "テーブルは存在しますが、データが空です。またはRLSポリシーによりアクセスが制限されています。"
+      error:
+        "テーブルは存在しますが、データが空です。またはRLSポリシーによりアクセスが制限されています。",
     };
-
   } catch (error) {
     console.error("スキーマ取得中の予期せぬエラー:", error);
     return {
       error: error instanceof Error ? error.message : "Unknown error",
       exists: false,
       columns: [],
-      sampleCount: 0
+      sampleCount: 0,
     };
   }
 }
@@ -114,8 +115,8 @@ export async function executeSQLQuery(sqlQuery: string) {
     }
 
     // SupabaseのRPC関数を使用して動的SQLを実行
-    const { data, error } = await supabase.rpc('execute_sql_query', {
-      query_text: sqlQuery
+    const { data, error } = await supabase.rpc("execute_sql_query", {
+      query_text: sqlQuery,
     });
 
     console.log("RPC実行結果:", { data, error });
@@ -126,20 +127,22 @@ export async function executeSQLQuery(sqlQuery: string) {
     }
 
     // エラーが結果に含まれている場合の処理
-    if (data && typeof data === 'object' && 'error' in data) {
+    if (data && typeof data === "object" && "error" in data) {
       console.error("SQLエラー:", data.error);
       return { success: false, error: data.error };
     }
 
     // 正常な結果を返す
-    console.log("SQL実行成功、結果件数:", Array.isArray(data) ? data.length : 0);
+    console.log(
+      "SQL実行成功、結果件数:",
+      Array.isArray(data) ? data.length : 0,
+    );
     return { success: true, data: data || [] };
-
   } catch (error) {
     console.error("SQL実行中の予期せぬエラー:", error);
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Unknown error"
+      error: error instanceof Error ? error.message : "Unknown error",
     };
   }
 }

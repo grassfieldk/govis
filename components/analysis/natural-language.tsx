@@ -1,12 +1,12 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import Editor from '@monaco-editor/react';
+import Editor from "@monaco-editor/react";
 import { useTheme } from "next-themes";
+import { useEffect, useState } from "react";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
-import { Badge } from "@/components/ui/badge";
 
 interface QueryResult {
   data: Record<string, unknown>[];
@@ -31,13 +31,13 @@ export function NaturalLanguage() {
     setIsClient(true);
 
     // 質問を復元
-    const savedQuestion = localStorage.getItem('natural-language-question');
+    const savedQuestion = localStorage.getItem("natural-language-question");
     if (savedQuestion) {
       setQuestion(savedQuestion);
     }
 
     // 結果を復元
-    const savedResult = localStorage.getItem('natural-language-result');
+    const savedResult = localStorage.getItem("natural-language-result");
     if (savedResult) {
       setResult(JSON.parse(savedResult));
     }
@@ -46,7 +46,7 @@ export function NaturalLanguage() {
   // 質問の変更をLocalStorageに保存
   useEffect(() => {
     if (isClient) {
-      localStorage.setItem('natural-language-question', question);
+      localStorage.setItem("natural-language-question", question);
     }
   }, [question, isClient]);
 
@@ -54,9 +54,9 @@ export function NaturalLanguage() {
   useEffect(() => {
     if (isClient) {
       if (result) {
-        localStorage.setItem('natural-language-result', JSON.stringify(result));
+        localStorage.setItem("natural-language-result", JSON.stringify(result));
       } else {
-        localStorage.removeItem('natural-language-result');
+        localStorage.removeItem("natural-language-result");
       }
     }
   }, [result, isClient]);
@@ -67,7 +67,7 @@ export function NaturalLanguage() {
     "こども家庭庁が最も多く支出している事業名トップ3を教えてください。",
     "防衛省への支出で、契約相手が多い法人名を5つリストアップしてください。",
     "支出額が10億円を超えている契約の府省庁別件数を教えて。",
-    "全データの最初の5件を表示してください。"
+    "全データの最初の5件を表示してください。",
   ];
 
   const handleSubmit = async () => {
@@ -87,7 +87,7 @@ export function NaturalLanguage() {
       const aiResponse = await fetch("/api/ai", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ question })
+        body: JSON.stringify({ question }),
       });
 
       const aiData = await aiResponse.json();
@@ -104,8 +104,8 @@ export function NaturalLanguage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           action: "execute",
-          query: aiData.sql
-        })
+          query: aiData.sql,
+        }),
       });
 
       const data = await response.json();
@@ -118,9 +118,8 @@ export function NaturalLanguage() {
         data: data.result || [],
         rowCount: data.rowCount || 0,
         executionTime: data.executionTime || 0,
-        generatedSQL: aiData.sql
+        generatedSQL: aiData.sql,
       });
-
     } catch (err) {
       console.error("クエリ実行エラー:", err);
       setError(err instanceof Error ? err.message : "Unknown error");
@@ -183,7 +182,9 @@ export function NaturalLanguage() {
             <div className="space-y-4">
               <div className="flex items-center gap-2">
                 <Badge variant="outline">件数: {result.rowCount}</Badge>
-                <Badge variant="outline">実行時間: {result.executionTime}ms</Badge>
+                <Badge variant="outline">
+                  実行時間: {result.executionTime}ms
+                </Badge>
               </div>
 
               {/* 生成されたSQL */}
@@ -200,7 +201,8 @@ export function NaturalLanguage() {
                       minimap: { enabled: false },
                       scrollBeyondLastLine: false,
                       fontSize: 12,
-                      fontFamily: 'Monaco, "Cascadia Code", "Roboto Mono", monospace',
+                      fontFamily:
+                        'Monaco, "Cascadia Code", "Roboto Mono", monospace',
                       lineNumbers: "off",
                       wordWrap: "on",
                       automaticLayout: true,
@@ -243,7 +245,9 @@ export function NaturalLanguage() {
                           <option value={10}>10件</option>
                           <option value={50}>50件</option>
                           <option value={100}>100件</option>
-                          <option value="all">全件（{result.rowCount}件）</option>
+                          <option value="all">
+                            全件（{result.rowCount}件）
+                          </option>
                         </select>
                       </div>
                     )}
@@ -253,20 +257,26 @@ export function NaturalLanguage() {
                       <thead className="bg-muted">
                         <tr>
                           {Object.keys(result.data[0]).map((key) => (
-                            <th key={key} className="p-2 text-left font-medium text-muted-foreground">
+                            <th
+                              key={key}
+                              className="p-2 text-left font-medium text-muted-foreground"
+                            >
                               {key}
                             </th>
                           ))}
                         </tr>
                       </thead>
                       <tbody>
-                        {(showAllRows ? result.data : result.data.slice(0, displayLimit)).map((row, index) => (
+                        {(showAllRows
+                          ? result.data
+                          : result.data.slice(0, displayLimit)
+                        ).map((row, index) => (
                           <tr key={index} className="border-t border-border">
                             {Object.values(row).map((value, cellIndex) => (
                               <td key={cellIndex} className="p-2">
-                                {typeof value === 'string' && value.length > 50
+                                {typeof value === "string" && value.length > 50
                                   ? `${value.substring(0, 50)}...`
-                                  : String(value || '')}
+                                  : String(value || "")}
                               </td>
                             ))}
                           </tr>
@@ -276,8 +286,7 @@ export function NaturalLanguage() {
                     <div className="p-2 text-xs text-muted-foreground bg-muted">
                       {showAllRows
                         ? `全${result.rowCount}件を表示中`
-                        : `${Math.min(displayLimit, result.data.length)}件を表示中（全${result.rowCount}件）`
-                      }
+                        : `${Math.min(displayLimit, result.data.length)}件を表示中（全${result.rowCount}件）`}
                     </div>
                   </div>
                 </div>
