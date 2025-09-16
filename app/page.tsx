@@ -311,7 +311,7 @@ export default function DashboardPage() {
             </CardHeader>
             <CardContent>
               <p className="text-2xl font-bold text-primary">
-                {data.summary.uniqueContractors.toLocaleString()}社/団体
+                {data.summary.uniqueContractors.toLocaleString()}社・団体
               </p>
             </CardContent>
           </Card>
