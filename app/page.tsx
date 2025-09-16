@@ -2,10 +2,11 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { BarChart3, Database, Building2, TrendingUp, Users, Calculator, Clock, Briefcase, Award } from "lucide-react";
+import { BarChart3, Database, Building2, TrendingUp, Users, Calculator, Clock, Briefcase, Award, Info } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 // 型定義
 interface DashboardData {
@@ -128,7 +129,21 @@ export default function DashboardPage() {
   const topThreeMinistries = data.ministryBreakdown.slice(0, 3);
   const topThreeShare = topThreeMinistries.reduce((sum, item) => sum + item.percentage, 0);
 
+  // 各セクションの説明文
+  const sectionDescriptions = {
+    ministryBreakdown: "国の各府省庁ごとの支出額と構成比を表示しています。どの分野に多くの予算が配分されているかを把握できます。",
+    contractTypes: "一般競争入札や随意契約など、契約方式ごとの件数比率を示しています。競争性指標は透明性の目安となります。",
+    sizeDistribution: "事業規模別の件数分布を表示しています。小規模から大規模まで、どの規模の事業が多いかを確認できます。",
+    topContractors: "支出額が多い主要な契約先を表示しています。政府調達の主要な受注者を把握できます。",
+    highValueContracts: "特に支出額が大きい契約案件を表示しています。大型事業の内容と担当府省庁を確認できます。",
+    dataSource: "このダッシュボードで使用しているデータの出典と最終更新日を表示しています。",
+    totalProjects: "2024年度に実施された行政事業の総件数です。",
+    uniqueContractors: "政府と契約を結んでいる企業・団体の総数です。",
+    averageAmount: "1件あたりの平均契約金額です。事業規模の平均的な水準を示しています。"
+  };
+
   return (
+    <TooltipProvider delayDuration={100} skipDelayDuration={500}>
     <div className="min-h-screen bg-background">
       {/* ヘッダー */}
       <header className="border-b border-border bg-card">
@@ -187,6 +202,14 @@ export default function DashboardPage() {
               <CardTitle className="flex items-center space-x-2">
                 <Building2 className="w-5 h-5" />
                 <span>府省庁別支出構成</span>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Info className="w-4 h-4 text-muted-foreground cursor-help hover:text-foreground transition-colors" />
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>{sectionDescriptions.ministryBreakdown}</p>
+                  </TooltipContent>
+                </Tooltip>
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -217,6 +240,14 @@ export default function DashboardPage() {
               <CardTitle className="flex items-center space-x-2">
                 <Award className="w-5 h-5" />
                 <span>契約方式別分析</span>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Info className="w-4 h-4 text-muted-foreground cursor-help hover:text-foreground transition-colors" />
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>{sectionDescriptions.contractTypes}</p>
+                  </TooltipContent>
+                </Tooltip>
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -246,6 +277,14 @@ export default function DashboardPage() {
               <CardTitle className="flex items-center space-x-2">
                 <Calculator className="w-4 h-4" />
                 <span>総事業数</span>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Info className="w-4 h-4 text-muted-foreground cursor-help hover:text-foreground transition-colors" />
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>{sectionDescriptions.totalProjects}</p>
+                  </TooltipContent>
+                </Tooltip>
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -260,6 +299,14 @@ export default function DashboardPage() {
               <CardTitle className="flex items-center space-x-2">
                 <Users className="w-4 h-4" />
                 <span>総支出先</span>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Info className="w-4 h-4 text-muted-foreground cursor-help hover:text-foreground transition-colors" />
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>{sectionDescriptions.uniqueContractors}</p>
+                  </TooltipContent>
+                </Tooltip>
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -274,6 +321,14 @@ export default function DashboardPage() {
               <CardTitle className="flex items-center space-x-2">
                 <TrendingUp className="w-4 h-4" />
                 <span>平均契約額</span>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Info className="w-4 h-4 text-muted-foreground cursor-help hover:text-foreground transition-colors" />
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>{sectionDescriptions.averageAmount}</p>
+                  </TooltipContent>
+                </Tooltip>
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -291,6 +346,14 @@ export default function DashboardPage() {
               <CardTitle className="flex items-center space-x-2">
                 <BarChart3 className="w-5 h-5" />
                 <span>事業規模分布</span>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Info className="w-4 h-4 text-muted-foreground cursor-help hover:text-foreground transition-colors" />
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>{sectionDescriptions.sizeDistribution}</p>
+                  </TooltipContent>
+                </Tooltip>
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -319,6 +382,14 @@ export default function DashboardPage() {
               <CardTitle className="flex items-center space-x-2">
                 <Briefcase className="w-5 h-5" />
                 <span>主要契約先</span>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Info className="w-4 h-4 text-muted-foreground cursor-help hover:text-foreground transition-colors" />
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>{sectionDescriptions.topContractors}</p>
+                  </TooltipContent>
+                </Tooltip>
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -350,6 +421,14 @@ export default function DashboardPage() {
               <CardTitle className="flex items-center space-x-2">
                 <TrendingUp className="w-5 h-5" />
                 <span>高額契約案件</span>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Info className="w-4 h-4 text-muted-foreground cursor-help hover:text-foreground transition-colors" />
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>{sectionDescriptions.highValueContracts}</p>
+                  </TooltipContent>
+                </Tooltip>
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -382,6 +461,14 @@ export default function DashboardPage() {
               <CardTitle className="flex items-center space-x-2">
                 <Clock className="w-5 h-5" />
                 <span>データ出典</span>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Info className="w-4 h-4 text-muted-foreground cursor-help hover:text-foreground transition-colors" />
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>{sectionDescriptions.dataSource}</p>
+                  </TooltipContent>
+                </Tooltip>
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -408,5 +495,6 @@ export default function DashboardPage() {
         </div>
       </main>
     </div>
+    </TooltipProvider>
   );
 }
