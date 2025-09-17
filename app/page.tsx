@@ -10,6 +10,7 @@ import {
   TrendingUp,
   Users,
 } from "lucide-react";
+import type { ReactNode } from "react";
 import { ReloadButton } from "@/components/reload-button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -19,7 +20,120 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 
-// 型定義
+export const dynamic = "force-dynamic";
+
+// ダッシュボード用コンポーネント
+interface StatCardProps {
+  title: string;
+  value: string | number;
+  icon: React.ReactNode;
+  tooltip?: string;
+  className?: string;
+}
+
+function StatCard({ title, value, icon, tooltip, className }: StatCardProps) {
+  return (
+    <Card className={className}>
+      <CardHeader>
+        <SectionTitle title={title} icon={icon} tooltip={tooltip} />
+      </CardHeader>
+      <CardContent>
+        <p className="text-2xl font-bold text-primary">{value}</p>
+      </CardContent>
+    </Card>
+  );
+}
+
+interface SectionTitleProps {
+  title: string;
+  icon: React.ReactNode;
+  tooltip?: string;
+  className?: string;
+}
+
+function SectionTitle({ title, icon, tooltip, className }: SectionTitleProps) {
+  return (
+    <CardTitle className={`flex items-center space-x-2 ${className || ""}`}>
+      {icon}
+      <span>{title}</span>
+      {tooltip && (
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Info className="w-4 h-4 text-muted-foreground cursor-help hover:text-foreground transition-colors" />
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>{tooltip}</p>
+          </TooltipContent>
+        </Tooltip>
+      )}
+    </CardTitle>
+  );
+}
+
+interface InfoBoxProps {
+  children: ReactNode;
+  className?: string;
+}
+
+function InfoBox({ children, className }: InfoBoxProps) {
+  return (
+    <div className={`mt-4 p-3 bg-muted/50 rounded-lg ${className || ""}`}>
+      <p className="text-sm text-muted-foreground text-center">{children}</p>
+    </div>
+  );
+}
+
+interface PercentageItem {
+  label: string;
+  value: string;
+  percentage: number;
+}
+
+interface PercentageListCardProps {
+  title: string;
+  icon: React.ReactNode;
+  tooltip: string;
+  items: PercentageItem[];
+  infoText?: string;
+  showBars?: boolean;
+  className?: string;
+}
+
+function PercentageListCard({
+  title,
+  icon,
+  tooltip,
+  items,
+  infoText,
+  showBars = true,
+  className,
+}: PercentageListCardProps) {
+  return (
+    <Card className={className}>
+      <CardHeader>
+        <SectionTitle title={title} icon={icon} tooltip={tooltip} />
+      </CardHeader>
+      <CardContent>
+        <div className={showBars ? "space-y-4" : "space-y-3"}>
+          {items.map((item) => (
+            <div key={item.label} className={showBars ? "space-y-2" : undefined}>
+              <div className="flex justify-between items-center">
+                <span className={showBars ? "font-medium text-sm" : "text-sm font-medium"}>
+                  {item.label}
+                </span>
+                <span className="text-sm text-muted-foreground">
+                  {item.value && `${item.value} `}({item.percentage.toFixed(1)}%)
+                </span>
+              </div>
+              {showBars && <PercentageBar percentage={item.percentage} />}
+            </div>
+          ))}
+        </div>
+        {infoText && <InfoBox>{infoText}</InfoBox>}
+      </CardContent>
+    </Card>
+  );
+} // 型定義
 interface DashboardData {
   summary: {
     totalAmount: number;
@@ -173,21 +287,18 @@ export default async function DashboardPage() {
 
   return (
     <TooltipProvider delayDuration={100} skipDelayDuration={500}>
+      {/* 1. ヘッダ概要セクション */}
       <div className="container mx-auto px-4 py-8">
-        {/* 1. ヘッダ概要セクション */}
         <div className="mb-8">
           <Card className="bg-gradient-to-r from-primary/10 to-primary/5 border-primary/20">
             <CardContent className="p-4">
               <div className="text-center">
-                <h3 className="text-lg font-semibold text-muted-foreground mb-3">
-                  総支出額
-                </h3>
+                <h3 className="text-muted-foreground mb-3">総支出額</h3>
                 <h2 className="text-4xl font-bold text-foreground mb-2">
                   {formatCurrency(data.summary.totalAmount)}
                 </h2>
                 <p className="text-muted-foreground">
-                  更新日: {data.summary.lastUpdated || "不明"} | 総事業数:{" "}
-                  {data.summary.totalProjects.toLocaleString()}件
+                  更新日: {data.summary.lastUpdated || "不明"}
                 </p>
               </div>
             </CardContent>
@@ -196,213 +307,84 @@ export default async function DashboardPage() {
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
           {/* 2. 府省庁別支出構成 */}
-          <Card className="lg:col-span-2">
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
-                <Building2 className="w-5 h-5" />
-                <span>府省庁別支出構成</span>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Info className="w-4 h-4 text-muted-foreground cursor-help hover:text-foreground transition-colors" />
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>{sectionDescriptions.ministryBreakdown}</p>
-                  </TooltipContent>
-                </Tooltip>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {data.ministryBreakdown.map((item) => (
-                  <div key={item.ministry} className="space-y-2">
-                    <div className="flex justify-between items-center">
-                      <span className="font-medium text-sm">
-                        {item.ministry}
-                      </span>
-                      <span className="text-sm text-muted-foreground">
-                        {formatCurrency(item.amount)} (
-                        {item.percentage.toFixed(1)}%)
-                      </span>
-                    </div>
-                    <PercentageBar percentage={item.percentage} />
-                  </div>
-                ))}
-              </div>
-              <div className="mt-4 p-3 bg-muted/50 rounded-lg">
-                <p className="text-sm text-muted-foreground text-center">
-                  上位3府省庁で {topThreeShare.toFixed(1)}% を占めています
-                </p>
-              </div>
-            </CardContent>
-          </Card>
+          <PercentageListCard
+            title="府省庁別支出構成"
+            icon={<Building2 className="w-5 h-5" />}
+            tooltip={sectionDescriptions.ministryBreakdown}
+            items={data.ministryBreakdown.map((item) => ({
+              label: item.ministry,
+              value: formatCurrency(item.amount),
+              percentage: item.percentage,
+            }))}
+            infoText={`上位3府省庁で ${topThreeShare.toFixed(1)}% を占めています`}
+            className="lg:col-span-2"
+          />
 
           {/* 3. 契約方式別分析 */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
-                <Award className="w-5 h-5" />
-                <span>契約方式別分析</span>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Info className="w-4 h-4 text-muted-foreground cursor-help hover:text-foreground transition-colors" />
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>{sectionDescriptions.contractTypes}</p>
-                  </TooltipContent>
-                </Tooltip>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                {data.contractTypes.slice(0, 3).map((item) => (
-                  <div
-                    key={item.type}
-                    className="flex justify-between items-center"
-                  >
-                    <span className="text-sm font-medium">{item.type}</span>
-                    <span className="text-sm text-muted-foreground">
-                      {item.percentage.toFixed(1)}%
-                    </span>
-                  </div>
-                ))}
-              </div>
-              <div className="mt-4 p-3 bg-muted/50 rounded-lg">
-                <p className="text-sm text-center">
-                  競争性指標: {data.summary.competitiveness.toFixed(1)}%
-                </p>
-              </div>
-            </CardContent>
-          </Card>
+          <PercentageListCard
+            title="契約方式別分析"
+            icon={<Award className="w-5 h-5" />}
+            tooltip={sectionDescriptions.contractTypes}
+            items={data.contractTypes.slice(0, 3).map((item) => ({
+              label: item.type,
+              value: "",
+              percentage: item.percentage,
+            }))}
+            infoText={`競争性指標: ${data.summary.competitiveness.toFixed(1)}%`}
+            showBars={false}
+          />
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          {/* 4. 簡易指標列 */}
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="flex items-center space-x-2">
-                <Calculator className="w-4 h-4" />
-                <span>総事業数</span>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Info className="w-4 h-4 text-muted-foreground cursor-help hover:text-foreground transition-colors" />
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>{sectionDescriptions.totalProjects}</p>
-                  </TooltipContent>
-                </Tooltip>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-2xl font-bold text-primary">
-                {data.summary.totalProjects.toLocaleString()}件
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="flex items-center space-x-2">
-                <Users className="w-4 h-4" />
-                <span>総支出先</span>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Info className="w-4 h-4 text-muted-foreground cursor-help hover:text-foreground transition-colors" />
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>{sectionDescriptions.uniqueContractors}</p>
-                  </TooltipContent>
-                </Tooltip>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-2xl font-bold text-primary">
-                {data.summary.uniqueContractors.toLocaleString()}社・団体
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="flex items-center space-x-2">
-                <TrendingUp className="w-4 h-4" />
-                <span>平均契約額</span>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Info className="w-4 h-4 text-muted-foreground cursor-help hover:text-foreground transition-colors" />
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>{sectionDescriptions.averageAmount}</p>
-                  </TooltipContent>
-                </Tooltip>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-2xl font-bold text-primary">
-                {formatCurrency(data.summary.averageAmount)}
-              </p>
-            </CardContent>
-          </Card>
+          {/* 4. 統計カード */}
+          <StatCard
+            title="総事業数"
+            value={`${data.summary.totalProjects.toLocaleString()}件`}
+            icon={<Calculator className="w-4 h-4" />}
+            tooltip={sectionDescriptions.totalProjects}
+          />
+          <StatCard
+            title="総支出先"
+            value={`${data.summary.uniqueContractors.toLocaleString()}社・団体`}
+            icon={<Users className="w-4 h-4" />}
+            tooltip={sectionDescriptions.uniqueContractors}
+          />
+          <StatCard
+            title="平均契約額"
+            value={formatCurrency(data.summary.averageAmount)}
+            icon={<TrendingUp className="w-4 h-4" />}
+            tooltip={sectionDescriptions.averageAmount}
+          />
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
           {/* 5. 事業規模分布 */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
-                <BarChart3 className="w-5 h-5" />
-                <span>事業規模分布</span>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Info className="w-4 h-4 text-muted-foreground cursor-help hover:text-foreground transition-colors" />
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>{sectionDescriptions.sizeDistribution}</p>
-                  </TooltipContent>
-                </Tooltip>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                {(() => {
-                  const totalSizeCount = Object.values(
-                    data.sizeDistribution,
-                  ).reduce((sum, count) => sum + count, 0);
-                  return Object.entries(data.sizeDistribution).map(
-                    ([category, count]) => (
-                      <div key={category} className="space-y-1">
-                        <div className="flex justify-between text-sm">
-                          <span>{category}</span>
-                          <span>
-                            {count}件 (
-                            {((count / totalSizeCount) * 100).toFixed(1)}%)
-                          </span>
-                        </div>
-                        <PercentageBar
-                          percentage={(count / totalSizeCount) * 100}
-                        />
-                      </div>
-                    ),
-                  );
-                })()}
-              </div>
-            </CardContent>
-          </Card>
+          <PercentageListCard
+            title="事業規模分布"
+            icon={<BarChart3 className="w-5 h-5" />}
+            tooltip={sectionDescriptions.sizeDistribution}
+            items={(() => {
+              const totalSizeCount = Object.values(
+                data.sizeDistribution,
+              ).reduce((sum, count) => sum + count, 0);
+              return Object.entries(data.sizeDistribution).map(
+                ([category, count]) => ({
+                  label: category,
+                  value: `${count}件`,
+                  percentage: (count / totalSizeCount) * 100,
+                }),
+              );
+            })()}
+          />
 
           {/* 6. 契約先分析 */}
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
-                <Briefcase className="w-5 h-5" />
-                <span>主要契約先</span>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Info className="w-4 h-4 text-muted-foreground cursor-help hover:text-foreground transition-colors" />
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>{sectionDescriptions.topContractors}</p>
-                  </TooltipContent>
-                </Tooltip>
-              </CardTitle>
+              <SectionTitle
+                title="主要契約先"
+                icon={<Briefcase className="w-5 h-5" />}
+                tooltip={sectionDescriptions.topContractors}
+              />
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
@@ -433,18 +415,11 @@ export default async function DashboardPage() {
           {/* 7. 高額契約案件 */}
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
-                <TrendingUp className="w-5 h-5" />
-                <span>高額契約案件</span>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Info className="w-4 h-4 text-muted-foreground cursor-help hover:text-foreground transition-colors" />
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>{sectionDescriptions.highValueContracts}</p>
-                  </TooltipContent>
-                </Tooltip>
-              </CardTitle>
+              <SectionTitle
+                title="高額契約案件"
+                icon={<TrendingUp className="w-5 h-5" />}
+                tooltip={sectionDescriptions.highValueContracts}
+              />
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
@@ -457,16 +432,13 @@ export default async function DashboardPage() {
                     className="border rounded-lg p-3 bg-muted/30"
                   >
                     <div className="flex justify-between items-start mb-2">
-                      <span className="text-sm font-medium text-muted-foreground">
-                        {index + 1}.
+                      <span className="text-sm font-medium">
+                        {index + 1}. {item.contractName}
                       </span>
                       <span className="text-sm font-bold text-primary">
                         {formatCurrency(Number.parseFloat(item.amount))}
                       </span>
                     </div>
-                    <p className="text-sm font-medium mb-1 line-clamp-2">
-                      {item.contractName}
-                    </p>
                     <p className="text-xs text-muted-foreground">
                       {item.ministry}
                     </p>
@@ -479,18 +451,11 @@ export default async function DashboardPage() {
           {/* 8. データ出典 */}
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
-                <Clock className="w-5 h-5" />
-                <span>データ出典</span>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Info className="w-4 h-4 text-muted-foreground cursor-help hover:text-foreground transition-colors" />
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>{sectionDescriptions.dataSource}</p>
-                  </TooltipContent>
-                </Tooltip>
-              </CardTitle>
+              <SectionTitle
+                title="データ出典"
+                icon={<Clock className="w-5 h-5" />}
+                tooltip={sectionDescriptions.dataSource}
+              />
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
@@ -504,12 +469,9 @@ export default async function DashboardPage() {
                     行政事業レビューデータ
                   </a>
                 </div>
-                <div className="mt-4 p-3 bg-muted/50 rounded-lg">
-                  <p className="text-xs text-muted-foreground text-center">
-                    最終更新:{" "}
-                    {data.summary.lastUpdated || "データベースから取得"}
-                  </p>
-                </div>
+                <InfoBox>
+                  最終更新: {data.summary.lastUpdated || "データベースから取得"}
+                </InfoBox>
               </div>
             </CardContent>
           </Card>

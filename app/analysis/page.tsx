@@ -10,9 +10,7 @@ export default function AnalysisPage() {
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="mb-8">
-        <h2 className="text-xl font-bold text-foreground mb-2">
-          データ分析クエリシステム
-        </h2>
+        <h2 className="text-2xl font-bold mb-2">データ分析クエリシステム</h2>
         <p className="text-muted-foreground">
           自然言語処理、SQL実行、プロンプト生成機能を統合した連携分析ツール
         </p>

@@ -1,6 +1,6 @@
 "use client";
 
-import { BarChart3, Database, Home } from "lucide-react";
+import { BarChart3, Home } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ThemeToggle } from "@/components/theme-toggle";

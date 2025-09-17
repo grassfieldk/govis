@@ -129,4 +129,175 @@
   body::-webkit-scrollbar {
     display: none;
   }
+
+  h1 {
+    @apply text-2xl font-bold text-foreground;
+  }
+
+  h2 {
+    @apply text-xl font-bold text-foreground mb-2;
+  }
+
+  h3 {
+    @apply text-lg font-semibold text-foreground mb-1;
+  }
+
+  h4 {
+    @apply text-base font-semibold text-foreground mb-1;
+  }
+
+  h5 {
+    @apply text-sm font-medium text-foreground mb-1;
+  }
+
+  h6 {
+    @apply text-xs font-medium text-foreground mb-1;
+  }
+
+  p {
+    @apply text-muted-foreground;
+  }
+
+  a {
+    @apply text-foreground hover:opacity-80 transition-opacity;
+  }
+
+  input {
+    @apply bg-background text-foreground;
+  }
+
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  input[type="number"],
+  input[type="search"],
+  input[type="tel"],
+  input[type="url"] {
+    @apply w-full px-3 py-2 border border-border rounded-md bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent;
+  }
+
+  select {
+    @apply w-full px-3 py-2 border border-border rounded-md bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent;
+  }
+
+  textarea {
+    @apply w-full px-3 py-2 border border-border rounded-md bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent min-h-[100px];
+    resize: vertical;
+  }
+
+  input[type="checkbox"],
+  input[type="radio"] {
+    @apply w-4 h-4 text-primary bg-background border-border rounded focus:ring-ring focus:ring-2;
+  }
+
+  input[type="file"] {
+    @apply w-full text-sm text-foreground file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-primary-foreground hover:file:bg-primary/80;
+  }
+
+  button {
+    @apply inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50;
+  }
+
+  label {
+    @apply text-sm font-medium text-foreground;
+  }
+
+  fieldset {
+    @apply border border-border rounded-lg p-4;
+  }
+
+  legend {
+    @apply px-2 text-sm font-semibold text-foreground;
+  }
+
+  ul {
+    @apply list-disc list-inside text-foreground space-y-1;
+  }
+
+  ol {
+    @apply list-decimal list-inside text-foreground space-y-1;
+  }
+
+  li {
+    @apply text-foreground;
+  }
+
+  ul ul,
+  ol ol,
+  ul ol,
+  ol ul {
+    @apply ml-4 mt-1;
+  }
+
+  table {
+    @apply w-full border-collapse border border-border bg-card;
+  }
+
+  thead {
+    @apply bg-muted;
+  }
+
+  th {
+    @apply border border-border px-4 py-2 text-left font-semibold text-foreground;
+  }
+
+  td {
+    @apply border border-border px-4 py-2 text-foreground;
+  }
+
+  tbody tr:nth-child(even) {
+    @apply bg-muted/30;
+  }
+
+  tbody tr:hover {
+    @apply bg-muted/50 transition-colors;
+  }
+
+  code {
+    @apply bg-muted px-1.5 py-0.5 rounded text-sm font-mono text-foreground;
+  }
+
+  pre {
+    @apply bg-muted p-4 rounded-lg overflow-x-auto border border-border;
+  }
+
+  pre code {
+    @apply bg-transparent p-0 text-sm;
+  }
+
+  blockquote {
+    @apply border-l-4 border-primary pl-4 py-2 italic text-muted-foreground bg-muted/30 rounded-r;
+  }
+
+  hr {
+    @apply border-0 border-t border-border my-6;
+  }
+
+  strong {
+    @apply font-semibold text-foreground;
+  }
+
+  em {
+    @apply italic text-foreground;
+  }
+
+  mark {
+    @apply bg-yellow-200 text-yellow-900 px-1 rounded;
+  }
+
+  .dark mark {
+    @apply bg-yellow-800 text-yellow-100;
+  }
+
+  details {
+    @apply border border-border rounded-lg p-4 bg-card;
+  }
+
+  summary {
+    @apply font-semibold text-foreground cursor-pointer hover:text-primary transition-colors;
+  }
+
+  figcaption {
+    @apply text-sm text-muted-foreground text-center mt-2 italic;
+  }
 }

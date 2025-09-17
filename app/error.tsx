@@ -24,7 +24,7 @@ export default function ErrorPage({ error, reset }: ErrorProps) {
           <h2 className="text-2xl font-bold text-foreground">
             データの読み込みに失敗しました
           </h2>
-          <p className="text-muted-foreground">
+          <p>
             ダッシュボードデータの取得中にエラーが発生しました。
             <br />
             しばらく時間をおいてから再度お試しください。
