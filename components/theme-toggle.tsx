@@ -5,7 +5,7 @@ import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 
-export function ThemeToggle() {
+export const ThemeToggle = () => {
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
 
@@ -36,4 +36,4 @@ export function ThemeToggle() {
       <span className="sr-only">テーマを切り替える</span>
     </Button>
   );
-}
+};

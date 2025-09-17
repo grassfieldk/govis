@@ -39,7 +39,7 @@ interface SQLResult {
   rowCount?: number;
 }
 
-export function UnifiedQueryEditor() {
+export const UnifiedQueryEditor = () => {
   const historySize = 10;
   // 初期値は空で、useEffectでLocalStorageから読み込み
   const [sqlQuery, setSqlQuery] = useState("");
@@ -747,4 +747,4 @@ LIMIT 5;`,
       </Card>
     </div>
   );
-}
+};

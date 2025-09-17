@@ -40,7 +40,7 @@ interface PromptTemplate {
   variables: string[];
 }
 
-export function PromptGeneration() {
+export const PromptGeneration = () => {
   const [selectedPurpose, setSelectedPurpose] = useState("");
   const [selectedModel, setSelectedModel] = useState("");
   const [customContext, setCustomContext] = useState("");
@@ -469,4 +469,4 @@ export function PromptGeneration() {
       </Tabs>
     </div>
   );
-}
+};

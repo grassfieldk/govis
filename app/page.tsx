@@ -31,18 +31,22 @@ interface StatCardProps {
   className?: string;
 }
 
-function StatCard({ title, value, icon, tooltip, className }: StatCardProps) {
-  return (
-    <Card className={className}>
-      <CardHeader>
-        <SectionTitle title={title} icon={icon} tooltip={tooltip} />
-      </CardHeader>
-      <CardContent>
-        <p className="text-2xl font-bold text-primary">{value}</p>
-      </CardContent>
-    </Card>
-  );
-}
+const StatCard = ({
+  title,
+  value,
+  icon,
+  tooltip,
+  className,
+}: StatCardProps) => (
+  <Card className={className}>
+    <CardHeader>
+      <SectionTitle title={title} icon={icon} tooltip={tooltip} />
+    </CardHeader>
+    <CardContent>
+      <p className="text-2xl font-bold text-primary">{value}</p>
+    </CardContent>
+  </Card>
+);
 
 interface SectionTitleProps {
   title: string;
@@ -51,37 +55,38 @@ interface SectionTitleProps {
   className?: string;
 }
 
-function SectionTitle({ title, icon, tooltip, className }: SectionTitleProps) {
-  return (
-    <CardTitle className={`flex items-center space-x-2 ${className || ""}`}>
-      {icon}
-      <span>{title}</span>
-      {tooltip && (
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Info className="w-4 h-4 text-muted-foreground cursor-help hover:text-foreground transition-colors" />
-          </TooltipTrigger>
-          <TooltipContent>
-            <p>{tooltip}</p>
-          </TooltipContent>
-        </Tooltip>
-      )}
-    </CardTitle>
-  );
-}
+const SectionTitle = ({
+  title,
+  icon,
+  tooltip,
+  className,
+}: SectionTitleProps) => (
+  <CardTitle className={`flex items-center space-x-2 ${className || ""}`}>
+    {icon}
+    <span>{title}</span>
+    {tooltip && (
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Info className="w-4 h-4 text-muted-foreground cursor-help hover:text-foreground transition-colors" />
+        </TooltipTrigger>
+        <TooltipContent>
+          <p>{tooltip}</p>
+        </TooltipContent>
+      </Tooltip>
+    )}
+  </CardTitle>
+);
 
 interface InfoBoxProps {
   children: ReactNode;
   className?: string;
 }
 
-function InfoBox({ children, className }: InfoBoxProps) {
-  return (
-    <div className={`mt-4 p-3 bg-muted/50 rounded-lg ${className || ""}`}>
-      <p className="text-sm text-muted-foreground text-center">{children}</p>
-    </div>
-  );
-}
+const InfoBox = ({ children, className }: InfoBoxProps) => (
+  <div className={`mt-4 p-3 bg-muted/50 rounded-lg ${className || ""}`}>
+    <p className="text-sm text-muted-foreground text-center">{children}</p>
+  </div>
+);
 
 interface PercentageItem {
   label: string;
@@ -99,7 +104,7 @@ interface PercentageListCardProps {
   className?: string;
 }
 
-function PercentageListCard({
+const PercentageListCard = ({
   title,
   icon,
   tooltip,
@@ -107,33 +112,35 @@ function PercentageListCard({
   infoText,
   showBars = true,
   className,
-}: PercentageListCardProps) {
-  return (
-    <Card className={className}>
-      <CardHeader>
-        <SectionTitle title={title} icon={icon} tooltip={tooltip} />
-      </CardHeader>
-      <CardContent>
-        <div className={showBars ? "space-y-4" : "space-y-3"}>
-          {items.map((item) => (
-            <div key={item.label} className={showBars ? "space-y-2" : undefined}>
-              <div className="flex justify-between items-center">
-                <span className={showBars ? "font-medium text-sm" : "text-sm font-medium"}>
-                  {item.label}
-                </span>
-                <span className="text-sm text-muted-foreground">
-                  {item.value && `${item.value} `}({item.percentage.toFixed(1)}%)
-                </span>
-              </div>
-              {showBars && <PercentageBar percentage={item.percentage} />}
+}: PercentageListCardProps) => (
+  <Card className={className}>
+    <CardHeader>
+      <SectionTitle title={title} icon={icon} tooltip={tooltip} />
+    </CardHeader>
+    <CardContent>
+      <div className={showBars ? "space-y-4" : "space-y-3"}>
+        {items.map((item) => (
+          <div key={item.label} className={showBars ? "space-y-2" : undefined}>
+            <div className="flex justify-between items-center">
+              <span
+                className={
+                  showBars ? "font-medium text-sm" : "text-sm font-medium"
+                }
+              >
+                {item.label}
+              </span>
+              <span className="text-sm text-muted-foreground">
+                {item.value && `${item.value} `}({item.percentage.toFixed(1)}%)
+              </span>
             </div>
-          ))}
-        </div>
-        {infoText && <InfoBox>{infoText}</InfoBox>}
-      </CardContent>
-    </Card>
-  );
-} // 型定義
+            {showBars && <PercentageBar percentage={item.percentage} />}
+          </div>
+        ))}
+      </div>
+      {infoText && <InfoBox>{infoText}</InfoBox>}
+    </CardContent>
+  </Card>
+);
 interface DashboardData {
   summary: {
     totalAmount: number;
@@ -231,18 +238,16 @@ async function getDashboardData(): Promise<DashboardData> {
 /**
  * エラー表示コンポーネント
  */
-function ErrorDisplay({ error }: { error: string }) {
-  return (
-    <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-4 py-8">
-        <div className="text-center">
-          <p className="text-destructive mb-4">{error}</p>
-          <ReloadButton />
-        </div>
+const ErrorDisplay = ({ error }: { error: string }) => (
+  <div className="min-h-screen bg-background">
+    <div className="container mx-auto px-4 py-8">
+      <div className="text-center">
+        <p className="text-destructive mb-4">{error}</p>
+        <ReloadButton />
       </div>
     </div>
-  );
-}
+  </div>
+);
 
 export default async function DashboardPage() {
   let data: DashboardData;

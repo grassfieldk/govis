@@ -15,7 +15,7 @@ interface QueryResult {
   generatedSQL: string;
 }
 
-export function NaturalLanguage() {
+export const NaturalLanguage = () => {
   // 初期値は空で、useEffectでLocalStorageから読み込み
   const [question, setQuestion] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -297,4 +297,4 @@ export function NaturalLanguage() {
       </Card>
     </div>
   );
-}
+};

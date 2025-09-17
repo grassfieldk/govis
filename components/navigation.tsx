@@ -10,9 +10,8 @@ import { Button } from "@/components/ui/button";
  * サイト全体で使用する統一ナビゲーションヘッダー
  * GOVIS ブランディングと右側ナビゲーション（ダッシュボード、分析パネル、テーマ切り替え）を含む
  */
-export default function UnifiedNavigation() {
+const UnifiedNavigation = () => {
   const pathname = usePathname();
-
   return (
     <header className="bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b border-border sticky top-0 z-50">
       <div className="container mx-auto px-4 py-3">
@@ -77,4 +76,6 @@ export default function UnifiedNavigation() {
       </div>
     </header>
   );
-}
+};
+
+export default UnifiedNavigation;
