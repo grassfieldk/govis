@@ -6,7 +6,7 @@
   },
   "files": {
     "ignoreUnknown": false,
-    "includes": ["app/**", "components/**", "lib/**", "*.md", "biome.json"]
+    "includes": ["src/**", "tools/**", "*.md", "biome.json"]
   },
   "formatter": {
     "enabled": true,
