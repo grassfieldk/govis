@@ -2,12 +2,16 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 
 // Google Gemini API設定
 const API_KEY = process.env.GOOGLE_API_KEY;
-
+const MODELS = process.env.GEMINI_MODEL;
 if (!API_KEY) {
   throw new Error("Google API キーが設定されていません");
 }
+if (!MODELS) {
+  throw new Error("Gemini モデルが指定されていません");
+}
 
 const genAI = new GoogleGenerativeAI(API_KEY);
+const model = genAI.getGenerativeModel({ model: MODELS });
 
 /**
  * 自然言語からSQLクエリを生成する
@@ -18,8 +22,6 @@ export async function generateSQLFromNaturalLanguage(
   tableName: string = "main_data",
 ) {
   try {
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-
     const systemPrompt = `
 あなたは、PostgreSQLデータベースを操作する優秀なSQLデータアナリストです。
 \`${tableName}\` という名前のテーブルを分析し、以下のタスクを実行してください。
