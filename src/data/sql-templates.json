@@ -1,0 +1,7 @@
+[
+  {
+    "id": 1,
+    "name": "全データの概要",
+    "query": "SELECT COUNT(*) AS 総件数, COUNT(DISTINCT \"政策所管府省庁\") as 府省庁数, COUNT(DISTINCT \"事業名\") as 事業数 FROM govis_main_data;"
+  }
+]

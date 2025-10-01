@@ -27,6 +27,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import sqlTemplates from "@/data/sql-templates.json";
 
 interface SQLResult {
   id: string;
@@ -116,56 +117,10 @@ export const UnifiedQueryEditor = () => {
     }
   }, [currentResult, isClient]);
 
-  const sqlTemplates = [
-    {
-      name: "全データの概要",
-      query: `SELECT
-  COUNT(*) as 総件数,
-  COUNT(DISTINCT "政策所管府省庁") as 府省庁数,
-  COUNT(DISTINCT "事業名") as 事業数
-FROM govis_main_data;`,
-    },
-    {
-      name: "府省庁別事業数",
-      query: `SELECT
-  "政策所管府省庁" as 府省庁名,
-  COUNT(*) as 事業数
-FROM govis_main_data
-WHERE "政策所管府省庁" IS NOT NULL AND "政策所管府省庁" != ''
-GROUP BY "政策所管府省庁"
-ORDER BY 事業数 DESC
-LIMIT 10;`,
-    },
-    {
-      name: "支出額が設定されている事業の分析",
-      query: `SELECT
-  "政策所管府省庁" as 府省庁名,
-  COUNT(*) as 件数,
-  SUM(CASE WHEN "金額" = '' OR "金額" IS NULL THEN 0 ELSE CAST("金額" AS numeric) END) as 総支出額
-FROM govis_main_data
-WHERE "金額" IS NOT NULL AND "金額" != ''
-GROUP BY "政策所管府省庁"
-ORDER BY 総支出額 DESC
-LIMIT 10;`,
-    },
-    {
-      name: "データサンプル表示",
-      query: `SELECT
-  "事業名",
-  "政策所管府省庁",
-  "金額",
-  "支出先ブロック名"
-FROM govis_main_data
-WHERE "事業名" IS NOT NULL AND "事業名" != ''
-LIMIT 5;`,
-    },
-  ];
-
   const executeSQL = async () => {
     if (!sqlQuery.trim()) return;
 
     setIsExecuting(true);
-    // 新しいクエリ実行時に表示設定をリセット
     setShowAllRows(false);
     setDisplayLimit(10);
 
@@ -413,9 +368,9 @@ LIMIT 5;`,
           </CardHeader>
           <CardContent>
             <div className="space-y-3 max-h-80 overflow-y-auto">
-              {sqlTemplates.map((template, index) => (
+              {sqlTemplates.map((template) => (
                 <div
-                  key={template.name}
+                  key={template.id}
                   className="p-3 border border-border rounded-lg"
                 >
                   <div className="flex items-center justify-between mb-2">
