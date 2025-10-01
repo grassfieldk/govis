@@ -1,0 +1,430 @@
+[
+  {
+    "table_physical_name": "govis_table_01",
+    "table_logical_name": "支出先_国庫債務負担行為等による契約",
+    "columns": [
+      {
+        "column_physical_name": "column_01",
+        "column_logical_name": "シート種別"
+      },
+      {
+        "column_physical_name": "column_02",
+        "column_logical_name": "事業年度"
+      },
+      {
+        "column_physical_name": "column_03",
+        "column_logical_name": "予算事業ID"
+      },
+      {
+        "column_physical_name": "column_04",
+        "column_logical_name": "事業名"
+      },
+      {
+        "column_physical_name": "column_05",
+        "column_logical_name": "府省庁の建制順"
+      },
+      {
+        "column_physical_name": "column_06",
+        "column_logical_name": "政策所管府省庁"
+      },
+      {
+        "column_physical_name": "column_07",
+        "column_logical_name": "府省庁"
+      },
+      {
+        "column_physical_name": "column_08",
+        "column_logical_name": "局・庁"
+      },
+      {
+        "column_physical_name": "column_09",
+        "column_logical_name": "部"
+      },
+      {
+        "column_physical_name": "column_10",
+        "column_logical_name": "課"
+      },
+      {
+        "column_physical_name": "column_11",
+        "column_logical_name": "室"
+      },
+      {
+        "column_physical_name": "column_12",
+        "column_logical_name": "班"
+      },
+      {
+        "column_physical_name": "column_13",
+        "column_logical_name": "係"
+      },
+      {
+        "column_physical_name": "column_14",
+        "column_logical_name": "支出先ブロック（国庫債務負担行為等による契約）"
+      },
+      {
+        "column_physical_name": "column_15",
+        "column_logical_name": "契約先名（国庫債務負担行為等による契約）"
+      },
+      {
+        "column_physical_name": "column_16",
+        "column_logical_name": "契約先の法人番号（国庫債務負担行為等による契約）"
+      },
+      {
+        "column_physical_name": "column_17",
+        "column_logical_name": "契約先の所在地（国庫債務負担行為等による契約）"
+      },
+      {
+        "column_physical_name": "column_18",
+        "column_logical_name": "契約先の法人種別（国庫債務負担行為等による契約）"
+      },
+      {
+        "column_physical_name": "column_19",
+        "column_logical_name": "契約概要（契約名）（国庫債務負担行為等による契約）"
+      },
+      {
+        "column_physical_name": "column_20",
+        "column_logical_name": "その他の契約"
+      },
+      {
+        "column_physical_name": "column_21",
+        "column_logical_name": "契約額（国庫債務負担行為等による契約）"
+      },
+      {
+        "column_physical_name": "column_22",
+        "column_logical_name": "契約方式等（国庫債務負担行為等による契約）"
+      },
+      {
+        "column_physical_name": "column_23",
+        "column_logical_name": "具体的な契約方式等（国庫債務負担行為等による契約）"
+      },
+      {
+        "column_physical_name": "column_24",
+        "column_logical_name": "入札者数（応募者数）（国庫債務負担行為等による契約）"
+      },
+      {
+        "column_physical_name": "column_25",
+        "column_logical_name": "落札率（％）（国庫債務負担行為等による契約）"
+      },
+      {
+        "column_physical_name": "column_26",
+        "column_logical_name": "一者応札・一者応募又は競争性のない随意契約となった理由及び改善策（契約額10億円以上）（国庫債務負担行為等による契約）"
+      },
+      {
+        "column_physical_name": "column_27",
+        "column_logical_name": "その他の契約（国庫債務負担行為等による契約）"
+      }
+    ]
+  },
+  {
+    "table_physical_name": "govis_table_02",
+    "table_logical_name": "支出先_支出ブロックのつながり",
+    "columns": [
+      {
+        "column_physical_name": "column_01",
+        "column_logical_name": "シート種別"
+      },
+      {
+        "column_physical_name": "column_02",
+        "column_logical_name": "事業年度"
+      },
+      {
+        "column_physical_name": "column_03",
+        "column_logical_name": "予算事業ID"
+      },
+      {
+        "column_physical_name": "column_04",
+        "column_logical_name": "事業名"
+      },
+      {
+        "column_physical_name": "column_05",
+        "column_logical_name": "府省庁の建制順"
+      },
+      {
+        "column_physical_name": "column_06",
+        "column_logical_name": "政策所管府省庁"
+      },
+      {
+        "column_physical_name": "column_07",
+        "column_logical_name": "府省庁"
+      },
+      {
+        "column_physical_name": "column_08",
+        "column_logical_name": "局・庁"
+      },
+      {
+        "column_physical_name": "column_09",
+        "column_logical_name": "部"
+      },
+      {
+        "column_physical_name": "column_10",
+        "column_logical_name": "課"
+      },
+      {
+        "column_physical_name": "column_11",
+        "column_logical_name": "室"
+      },
+      {
+        "column_physical_name": "column_12",
+        "column_logical_name": "班"
+      },
+      {
+        "column_physical_name": "column_13",
+        "column_logical_name": "係"
+      },
+      {
+        "column_physical_name": "column_14",
+        "column_logical_name": "支出元の支出先ブロック"
+      },
+      {
+        "column_physical_name": "column_15",
+        "column_logical_name": "支出元の支出先ブロック名"
+      },
+      {
+        "column_physical_name": "column_16",
+        "column_logical_name": "担当組織からの支出"
+      },
+      {
+        "column_physical_name": "column_17",
+        "column_logical_name": "支出先の支出先ブロック"
+      },
+      {
+        "column_physical_name": "column_18",
+        "column_logical_name": "支出先の支出先ブロック名"
+      },
+      {
+        "column_physical_name": "column_19",
+        "column_logical_name": "資金の流れの補足情報"
+      },
+      {
+        "column_physical_name": "column_20",
+        "column_logical_name": "国自らが支出する間接経費"
+      },
+      {
+        "column_physical_name": "column_21",
+        "column_logical_name": "国自らが支出する間接経費の項目"
+      },
+      {
+        "column_physical_name": "column_22",
+        "column_logical_name": "国自らが支出する間接経費の金額"
+      }
+    ]
+  },
+  {
+    "table_physical_name": "govis_table_03",
+    "table_logical_name": "支出先_支出情報",
+    "columns": [
+      {
+        "column_physical_name": "column_01",
+        "column_logical_name": "シート種別"
+      },
+      {
+        "column_physical_name": "column_02",
+        "column_logical_name": "事業年度"
+      },
+      {
+        "column_physical_name": "column_03",
+        "column_logical_name": "予算事業ID"
+      },
+      {
+        "column_physical_name": "column_04",
+        "column_logical_name": "事業名"
+      },
+      {
+        "column_physical_name": "column_05",
+        "column_logical_name": "府省庁の建制順"
+      },
+      {
+        "column_physical_name": "column_06",
+        "column_logical_name": "政策所管府省庁"
+      },
+      {
+        "column_physical_name": "column_07",
+        "column_logical_name": "府省庁"
+      },
+      {
+        "column_physical_name": "column_08",
+        "column_logical_name": "局・庁"
+      },
+      {
+        "column_physical_name": "column_09",
+        "column_logical_name": "部"
+      },
+      {
+        "column_physical_name": "column_10",
+        "column_logical_name": "課"
+      },
+      {
+        "column_physical_name": "column_11",
+        "column_logical_name": "室"
+      },
+      {
+        "column_physical_name": "column_12",
+        "column_logical_name": "班"
+      },
+      {
+        "column_physical_name": "column_13",
+        "column_logical_name": "係"
+      },
+      {
+        "column_physical_name": "column_14",
+        "column_logical_name": "支出先ブロック番号"
+      },
+      {
+        "column_physical_name": "column_15",
+        "column_logical_name": "支出先ブロック名"
+      },
+      {
+        "column_physical_name": "column_16",
+        "column_logical_name": "支出先の数"
+      },
+      {
+        "column_physical_name": "column_17",
+        "column_logical_name": "事業を行う上での役割"
+      },
+      {
+        "column_physical_name": "column_18",
+        "column_logical_name": "ブロックの合計支出額"
+      },
+      {
+        "column_physical_name": "column_19",
+        "column_logical_name": "支出先名"
+      },
+      {
+        "column_physical_name": "column_20",
+        "column_logical_name": "法人番号"
+      },
+      {
+        "column_physical_name": "column_21",
+        "column_logical_name": "所在地"
+      },
+      {
+        "column_physical_name": "column_22",
+        "column_logical_name": "法人種別"
+      },
+      {
+        "column_physical_name": "column_23",
+        "column_logical_name": "その他支出先"
+      },
+      {
+        "column_physical_name": "column_24",
+        "column_logical_name": "支出先の合計支出額"
+      },
+      {
+        "column_physical_name": "column_25",
+        "column_logical_name": "契約概要"
+      },
+      {
+        "column_physical_name": "column_26",
+        "column_logical_name": "金額"
+      },
+      {
+        "column_physical_name": "column_27",
+        "column_logical_name": "契約方式等"
+      },
+      {
+        "column_physical_name": "column_28",
+        "column_logical_name": "具体的な契約方式等"
+      },
+      {
+        "column_physical_name": "column_29",
+        "column_logical_name": "入札者数"
+      },
+      {
+        "column_physical_name": "column_30",
+        "column_logical_name": "落札率"
+      },
+      {
+        "column_physical_name": "column_31",
+        "column_logical_name": "一者応札・一者応募又は競争性のない随意契約となった理由及び改善策（支出額10億円以上）"
+      },
+      {
+        "column_physical_name": "column_32",
+        "column_logical_name": "その他の契約"
+      }
+    ]
+  },
+  {
+    "table_physical_name": "govis_table_04",
+    "table_logical_name": "支出先_費目・使途",
+    "columns": [
+      {
+        "column_physical_name": "column_01",
+        "column_logical_name": "シート種別"
+      },
+      {
+        "column_physical_name": "column_02",
+        "column_logical_name": "事業年度"
+      },
+      {
+        "column_physical_name": "column_03",
+        "column_logical_name": "予算事業ID"
+      },
+      {
+        "column_physical_name": "column_04",
+        "column_logical_name": "事業名"
+      },
+      {
+        "column_physical_name": "column_05",
+        "column_logical_name": "府省庁の建制順"
+      },
+      {
+        "column_physical_name": "column_06",
+        "column_logical_name": "政策所管府省庁"
+      },
+      {
+        "column_physical_name": "column_07",
+        "column_logical_name": "府省庁"
+      },
+      {
+        "column_physical_name": "column_08",
+        "column_logical_name": "局・庁"
+      },
+      {
+        "column_physical_name": "column_09",
+        "column_logical_name": "部"
+      },
+      {
+        "column_physical_name": "column_10",
+        "column_logical_name": "課"
+      },
+      {
+        "column_physical_name": "column_11",
+        "column_logical_name": "室"
+      },
+      {
+        "column_physical_name": "column_12",
+        "column_logical_name": "班"
+      },
+      {
+        "column_physical_name": "column_13",
+        "column_logical_name": "係"
+      },
+      {
+        "column_physical_name": "column_14",
+        "column_logical_name": "支出先ブロック番号"
+      },
+      {
+        "column_physical_name": "column_15",
+        "column_logical_name": "支出先名"
+      },
+      {
+        "column_physical_name": "column_16",
+        "column_logical_name": "法人番号"
+      },
+      {
+        "column_physical_name": "column_17",
+        "column_logical_name": "契約概要"
+      },
+      {
+        "column_physical_name": "column_18",
+        "column_logical_name": "費目"
+      },
+      {
+        "column_physical_name": "column_19",
+        "column_logical_name": "使途"
+      },
+      {
+        "column_physical_name": "column_20",
+        "column_logical_name": "金額"
+      }
+    ]
+  }
+]
