@@ -12,10 +12,11 @@ if (!supabaseUrl || !supabaseAnonKey) {
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 /**
+ * NOTE: 現在未使用
  * データベーススキーマ情報を取得する
  * オリジナルと同様の方式でinformation_schemaから取得
  */
-export async function getTableSchema(tableName: string = "govis_main_data") {
+export async function getTableSchema(tableName: string) {
   try {
     console.log(`=== スキーマ取得開始: ${tableName} ===`);
 

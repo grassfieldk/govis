@@ -1,6 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server";
+import schemaInfo from "@/data/schema-info.json";
 import { generateSQLFromNaturalLanguage } from "@/lib/gemini";
-import { getTableSchema } from "@/lib/supabase";
 
 export async function POST(request: NextRequest) {
   try {
@@ -13,24 +13,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 1. スキーマ情報を取得
-    const schemaData = await getTableSchema("govis_main_data");
-
-    if (!schemaData.exists || !schemaData.columns) {
-      return NextResponse.json(
-        { error: "スキーマ情報の取得に失敗しました" },
-        { status: 500 },
-      );
-    }
-
-    // スキーマ情報を文字列に変換
-    const schemaInfo = `テーブル名: govis_main_data\n列一覧:\n${schemaData.columns.map((col) => `- ${col.column_name} (${col.data_type})`).join("\n")}`;
-
-    // 2. AIでSQLを生成
+    // SQLクエリ生成リクエスト
     const sqlResult = await generateSQLFromNaturalLanguage(
       question,
-      schemaInfo,
-      "govis_main_data",
+      JSON.stringify(schemaInfo),
     );
 
     if (!sqlResult.success || !sqlResult.sql) {

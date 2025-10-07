@@ -6,8 +6,29 @@ import { executeSQLQuery, supabase } from "@/lib/supabase";
  */
 export async function GET() {
   try {
-    // 1. 総支出額と基本統計
-    const uniqueProjectCountQuery = `SELECT COUNT(DISTINCT "事業名") as count FROM govis_main_data WHERE "事業名" IS NOT NULL AND "事業名" != ''`;
+    // メインデータ - 全件取得（制限なし）
+    const { data: mainData, error: mainError } = await supabase
+      .from("govis_table_03")
+      .select("*")
+      .not("column_26", "is", null)
+      .neq("column_26", "")
+      .order("column_02", { ascending: true }) // 順序を固定
+      .limit(2147483647); // PostgreSQLの最大整数値
+
+    if (mainError) {
+      console.error("メインデータ取得エラー:", mainError);
+      return NextResponse.json(
+        { error: "メインデータの取得に失敗しました" },
+        { status: 500 },
+      );
+    }
+
+    // ユニーク事業数
+    const uniqueProjectCountQuery = `
+      SELECT COUNT(DISTINCT concat("column_02", '-', "column_03")) as count
+      FROM govis_table_03
+      WHERE "column_04" IS NOT NULL AND "column_04" != ''
+    `;
     const uniqueProjectCountResult = await executeSQLQuery(
       uniqueProjectCountQuery,
     );
@@ -26,102 +47,40 @@ export async function GET() {
     }
     const totalProjects = uniqueProjectCountResult.data?.[0]?.count || 0;
 
-    const { data: totalStats, error: totalError } = await supabase
-      .from("govis_main_data")
+    // 費目別分析用データ - 全件取得（制限なし）
+    const { data: expenseData, error: expenseError } = await supabase
+      .from("govis_table_04")
       .select("*")
-      .not("金額", "is", null)
-      .neq("金額", "");
+      .not("column_20", "is", null)
+      .neq("column_20", "")
+      .order("column_02", { ascending: true }) // 順序を固定
+      .limit(2147483647); // PostgreSQLの最大整数値
 
-    if (totalError) {
-      console.error("総統計取得エラー:", totalError);
+    if (expenseError) {
+      console.error("費目データ取得エラー:", expenseError);
       return NextResponse.json(
-        { error: "総統計データの取得に失敗しました" },
+        { error: "費目データの取得に失敗しました" },
         { status: 500 },
       );
     }
 
-    // 2. 府省庁別支出構成
-    const { data: ministryData, error: ministryError } = await supabase
-      .from("govis_main_data")
-      .select("*")
-      .not("政策所管府省庁", "is", null)
-      .not("金額", "is", null)
-      .neq("金額", "");
+    // 最新年度
+    const { data: latestYearData, error: latestYearError } = await supabase
+      .from("govis_table_03")
+      .select("column_02")
+      .not("column_02", "is", null)
+      .order("column_02", { ascending: false })
+      .limit(1);
 
-    if (ministryError) {
-      console.error("府省庁別データ取得エラー:", ministryError);
-      return NextResponse.json(
-        { error: "府省庁別データの取得に失敗しました" },
-        { status: 500 },
-      );
-    }
-
-    // 3. 契約方式別分析
-    const { data: contractTypeData, error: contractTypeError } = await supabase
-      .from("govis_main_data")
-      .select("*")
-      .not("契約方式等", "is", null);
-
-    if (contractTypeError) {
-      console.error("契約方式データ取得エラー:", contractTypeError);
-      return NextResponse.json(
-        { error: "契約方式データの取得に失敗しました" },
-        { status: 500 },
-      );
-    }
-
-    // 4. 契約先分析
-    const { data: contractorData, error: contractorError } = await supabase
-      .from("govis_main_data")
-      .select("*")
-      .not("支出先名", "is", null)
-      .not("金額", "is", null)
-      .neq("金額", "");
-
-    if (contractorError) {
-      console.error("契約先データ取得エラー:", contractorError);
-      return NextResponse.json(
-        { error: "契約先データの取得に失敗しました" },
-        { status: 500 },
-      );
-    }
-
-    // 5. 高額契約案件
-    const { data: highValueData, error: highValueError } = await supabase
-      .from("govis_main_data")
-      .select("*")
-      .not("事業名", "is", null)
-      .not("金額", "is", null)
-      .neq("金額", "")
-      .order("金額", { ascending: false })
-      .limit(10);
-
-    if (highValueError) {
-      console.error("高額契約データ取得エラー:", highValueError);
-      return NextResponse.json(
-        { error: "高額契約データの取得に失敗しました" },
-        { status: 500 },
-      );
-    }
-
-    // 6. 最新事業年度（契約締結日の代替）
-    const { data: latestContractData, error: latestContractError } =
-      await supabase
-        .from("govis_main_data")
-        .select("*")
-        .not("事業年度", "is", null)
-        .order("事業年度", { ascending: false })
-        .limit(1);
-
-    if (latestContractError) {
-      console.error("最新年度取得エラー:", latestContractError);
+    if (latestYearError) {
+      console.error("最新年度取得エラー:", latestYearError);
       return NextResponse.json(
         { error: "最新年度の取得に失敗しました" },
         { status: 500 },
       );
     }
 
-    // 安全にデータを処理するヘルパー関数
+    // ヘルパー関数
     const safeGetValue = (
       row: Record<string, unknown>,
       key: string,
@@ -129,46 +88,66 @@ export async function GET() {
       const value = row[key];
       return typeof value === "string" ? value : "";
     };
-
     const safeParseFloat = (value: string): number => {
       const parsed = Number.parseFloat(value);
       return Number.isNaN(parsed) ? 0 : parsed;
     };
 
-    // データ処理
-    const totalAmount = (totalStats || []).reduce((sum, item) => {
-      const amount = safeParseFloat(safeGetValue(item, "金額"));
+    // === 基本統計の計算 ===
+
+    // 総支出額
+    const totalAmount = (mainData || []).reduce((sum, item) => {
+      const amount = safeParseFloat(safeGetValue(item, "column_26"));
       return sum + amount;
     }, 0);
 
-    // デバッグ情報をログ出力
-    console.log("デバッグ情報:");
-    console.log(`- SQLから取得したユニークな事業名数: ${totalProjects}`);
-    console.log(`- 総支出額データ数: ${totalStats?.length || 0}`);
+    // ユニーク契約先数
+    const uniqueContractors = new Set(
+      (mainData || [])
+        .map((item) => safeGetValue(item, "column_19"))
+        .filter(Boolean),
+    ).size;
 
-    // 府省庁別集計
-    const ministryStats: Record<string, number> = {};
-    (ministryData || []).forEach((item) => {
-      const ministry = safeGetValue(item, "政策所管府省庁");
-      const amount = safeParseFloat(safeGetValue(item, "金額"));
+    // 平均契約額
+    const averageAmount = totalProjects > 0 ? totalAmount / totalProjects : 0;
+
+    // === 府省庁別分析 ===
+
+    const ministryStats: Record<
+      string,
+      { amount: number; projects: Set<string> }
+    > = {};
+    (mainData || []).forEach((item) => {
+      const ministry = safeGetValue(item, "column_06");
+      const amount = safeParseFloat(safeGetValue(item, "column_26"));
+      const projectId = `${safeGetValue(item, "column_02")}-${safeGetValue(item, "column_03")}`;
+
       if (ministry && amount > 0) {
-        ministryStats[ministry] = (ministryStats[ministry] || 0) + amount;
+        if (!ministryStats[ministry]) {
+          ministryStats[ministry] = { amount: 0, projects: new Set() };
+        }
+        ministryStats[ministry].amount += amount;
+        if (projectId !== "-") {
+          ministryStats[ministry].projects.add(projectId);
+        }
       }
     });
 
     const topMinistries = Object.entries(ministryStats)
-      .sort(([, a], [, b]) => b - a)
+      .sort(([, a], [, b]) => b.amount - a.amount)
       .slice(0, 5)
-      .map(([ministry, amount]) => ({
+      .map(([ministry, data]) => ({
         ministry,
-        amount,
-        percentage: (amount / totalAmount) * 100,
+        amount: data.amount,
+        projects: data.projects.size,
+        percentage: (data.amount / totalAmount) * 100,
       }));
 
-    // 契約方式別集計
+    // === 契約方式別分析 ===
+
     const contractTypeStats: Record<string, number> = {};
-    (contractTypeData || []).forEach((item) => {
-      const type = safeGetValue(item, "契約方式等");
+    (mainData || []).forEach((item) => {
+      const type = safeGetValue(item, "column_27");
       if (type) {
         contractTypeStats[type] = (contractTypeStats[type] || 0) + 1;
       }
@@ -178,16 +157,29 @@ export async function GET() {
       ([type, count]) => ({
         type,
         count,
-        percentage: (count / (contractTypeData?.length || 1)) * 100,
+        percentage: (count / (mainData?.length || 1)) * 100,
       }),
     );
 
-    // 契約先別集計
+    // 競争性指標の計算
+    const competitiveTypes = ["一般競争契約", "指名競争契約"];
+    const competitiveCount = contractTypePercentages
+      .filter((item) =>
+        competitiveTypes.some((type) => item.type.includes(type)),
+      )
+      .reduce((sum, item) => sum + item.count, 0);
+    const competitiveness =
+      (mainData?.length || 0) > 0
+        ? (competitiveCount / mainData.length) * 100
+        : 0;
+
+    // === 契約先分析 ===
+
     const contractorStats: Record<string, { count: number; amount: number }> =
       {};
-    (contractorData || []).forEach((item) => {
-      const contractor = safeGetValue(item, "支出先名");
-      const amount = safeParseFloat(safeGetValue(item, "金額"));
+    (mainData || []).forEach((item) => {
+      const contractor = safeGetValue(item, "column_19");
+      const amount = safeParseFloat(safeGetValue(item, "column_26"));
       if (contractor && amount > 0) {
         if (!contractorStats[contractor]) {
           contractorStats[contractor] = { count: 0, amount: 0 };
@@ -206,10 +198,11 @@ export async function GET() {
         count: data.count,
       }));
 
-    // 事業規模分布
+    // === 事業規模分布 ===
+
     const sizeDistribution: Record<string, number> = {};
-    (totalStats || []).forEach((item) => {
-      const amount = safeParseFloat(safeGetValue(item, "金額"));
+    (mainData || []).forEach((item) => {
+      const amount = safeParseFloat(safeGetValue(item, "column_26"));
       if (amount > 0) {
         let category: string;
         if (amount < 1000000) category = "100万円未満";
@@ -222,25 +215,87 @@ export async function GET() {
       }
     });
 
-    // 支出先統計
-    const uniqueContractors = new Set(
-      (contractorData || [])
-        .map((item) => safeGetValue(item, "支出先名"))
-        .filter(Boolean),
-    ).size;
-    const averageAmount = totalProjects > 0 ? totalAmount / totalProjects : 0;
+    // === 高額契約案件 ===
 
-    // 競争性指標計算
-    const competitiveTypes = ["一般競争入札", "指名競争入札"];
-    const competitiveCount = contractTypePercentages
-      .filter((item) =>
-        competitiveTypes.some((type) => item.type.includes(type)),
-      )
-      .reduce((sum, item) => sum + item.count, 0);
-    const competitiveness =
-      (contractTypeData?.length || 0) > 0
-        ? (competitiveCount / contractTypeData.length) * 100
+    const highValueContracts = (mainData || [])
+      .map((item) => ({
+        contractName: safeGetValue(item, "column_04"),
+        amount: safeGetValue(item, "column_26"),
+        ministry: safeGetValue(item, "column_06"),
+        numericAmount: safeParseFloat(safeGetValue(item, "column_26")),
+      }))
+      .filter((item) => item.numericAmount > 0)
+      .sort((a, b) => b.numericAmount - a.numericAmount)
+      .slice(0, 3)
+      .map((item, index) => ({
+        contractName: item.contractName,
+        amount: item.amount,
+        ministry: item.ministry,
+        id: `contract-${index}-${item.contractName}-${item.amount}`,
+      }));
+
+    // === 費目別分析 ===
+
+    const expenseTypeStats: Record<string, number> = {};
+
+    (expenseData || []).forEach((item) => {
+      const expense = safeGetValue(item, "column_18");
+      const amount = safeParseFloat(safeGetValue(item, "column_20"));
+
+      if (expense && amount > 0) {
+        expenseTypeStats[expense] = (expenseTypeStats[expense] || 0) + amount;
+      }
+    });
+
+    const topExpenseTypes = Object.entries(expenseTypeStats)
+      .sort(([, a], [, b]) => b - a)
+      .slice(0, 5)
+      .map(([type, amount]) => ({
+        type,
+        amount,
+        percentage:
+          (amount /
+            Object.values(expenseTypeStats).reduce(
+              (sum, val) => sum + val,
+              0,
+            )) *
+          100,
+      }));
+
+    // === 競争性詳細分析 ===
+
+    // 平均入札者数の計算（govis_table_03から）
+    const biddersData = (mainData || [])
+      .map((item) => {
+        const bidders = safeGetValue(item, "column_29");
+        return safeParseFloat(bidders);
+      })
+      .filter((count) => count > 0); // 0より大きい有効な入札者数のみ
+
+    const averageBidders =
+      biddersData.length > 0
+        ? biddersData.reduce((sum, count) => sum + count, 0) /
+          biddersData.length
         : 0;
+
+    // 一者応札率の計算
+    const singleBidderCount = biddersData.filter((count) => count === 1).length;
+    const singleBidderRatio =
+      biddersData.length > 0
+        ? (singleBidderCount / biddersData.length) * 100
+        : 0;
+
+    // 透明性スコアの改善（複数指標の統合）
+    const transparencyScore = Math.max(
+      0,
+      Math.min(
+        100,
+        competitiveness * 0.6 + // 競争入札率: 60%
+          (100 - singleBidderRatio) * 0.4, // 一者応札回避率: 40%
+      ),
+    );
+
+    // === レスポンスデータの構築 ===
 
     const dashboardData = {
       summary: {
@@ -249,22 +304,30 @@ export async function GET() {
         uniqueContractors,
         averageAmount,
         competitiveness,
-        lastUpdated: latestContractData?.[0]
-          ? safeGetValue(latestContractData[0], "事業年度")
-          : null,
+        lastUpdated:
+          latestYearData?.[0] && typeof latestYearData[0] === "object"
+            ? safeGetValue(
+                latestYearData[0] as Record<string, unknown>,
+                "column_02",
+              )
+            : null,
       },
       ministryBreakdown: topMinistries,
       contractTypes: contractTypePercentages,
       topContractors,
       sizeDistribution,
-      highValueContracts: (highValueData || [])
-        .slice(0, 3)
-        .map((item, index) => ({
-          contractName: safeGetValue(item, "事業名"),
-          amount: safeGetValue(item, "金額"),
-          ministry: safeGetValue(item, "政策所管府省庁"),
-          id: `contract-${index}-${safeGetValue(item, "事業名")}-${safeGetValue(item, "金額")}`,
-        })),
+      highValueContracts,
+      expenseAnalysis: {
+        byType: topExpenseTypes,
+        totalExpenseRecords: expenseData?.length || 0,
+      },
+      transparency: {
+        competitiveContractRatio: competitiveness,
+        averageBidders: Math.round(averageBidders * 10) / 10,
+        transparencyScore: Math.round(transparencyScore * 10) / 10,
+        singleBidderRatio: Math.round(singleBidderRatio * 10) / 10,
+        totalBiddingContracts: biddersData.length,
+      },
     };
 
     return NextResponse.json(dashboardData);

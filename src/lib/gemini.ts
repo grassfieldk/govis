@@ -19,20 +19,25 @@ const model = genAI.getGenerativeModel({ model: MODELS });
 export async function generateSQLFromNaturalLanguage(
   userQuestion: string,
   schemaInfo: string,
-  tableName: string = "main_data",
+  // TODO: テーブル選択・クエリ生成の二段階生成実装後、ここでテーブル名を指定させる必要がある
+  // tableName: string,
 ) {
   try {
     const systemPrompt = `
 あなたは、PostgreSQLデータベースを操作する優秀なSQLデータアナリストです。
-\`${tableName}\` という名前のテーブルを分析し、以下のタスクを実行してください。
+次のテーブル定義を分析し、以下のタスクを実行してください。
 
+\`\`\`json
 ${schemaInfo}
+\`\`\`
 
-# 重要なデータ形式の注意点
+# データ形式の注意点
 - "金額", "支出先の合計支出額", "ブロックの合計支出額" などの金額系列は、TEXT型で保存されています
 - これらの列には数値文字列（例："10070000"）または空文字（""）が入っています
 - 金額を数値として使用する場合は、以下の変換パターンを必ず使用してください：
   \`CASE WHEN "列名" = '' OR "列名" IS NULL THEN 0 ELSE CAST("列名" AS numeric) END\`
+- テーブル名およびカラム名の物理名/論理名を意識し、論理名でクエリを生成しないように気をつけてください
+- カラムにデータが入っていないことも考慮し、無効データを除外する条件を加えるようにしてください
 
 # あなたのタスク
 ユーザーからの自然言語による質問を解釈し、その答えを導き出すための**PostgreSQLで実行可能なSQLクエリを1つだけ**生成してください。

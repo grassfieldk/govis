@@ -4,9 +4,10 @@ import {
   Briefcase,
   Building2,
   Calculator,
-  Clock,
   Database,
+  Eye,
   Info,
+  Shield,
   TrendingUp,
   Users,
 } from "lucide-react";
@@ -141,6 +142,141 @@ const PercentageListCard = ({
     </CardContent>
   </Card>
 );
+
+interface TransparencyCardProps {
+  transparency: {
+    competitiveContractRatio: number;
+    averageBidders: number;
+    transparencyScore: number;
+    singleBidderRatio?: number;
+    totalBiddingContracts?: number;
+  };
+  className?: string;
+}
+
+const TransparencyCard = ({
+  transparency,
+  className,
+}: TransparencyCardProps) => (
+  <Card className={className}>
+    <CardHeader>
+      <SectionTitle
+        title="契約透明性指標"
+        icon={<Shield className="w-5 h-5" />}
+        tooltip="政府契約の透明性と競争性を示す指標です。高いほど健全な契約が行われています。"
+      />
+    </CardHeader>
+    <CardContent>
+      <div className="space-y-4">
+        <div className="flex justify-between items-center">
+          <span className="text-sm font-medium">競争入札率</span>
+          <span className="text-sm font-bold text-primary">
+            {transparency.competitiveContractRatio.toFixed(1)}%
+          </span>
+        </div>
+        <PercentageBar
+          percentage={transparency.competitiveContractRatio}
+          color={
+            transparency.competitiveContractRatio >= 70
+              ? "bg-green-500"
+              : transparency.competitiveContractRatio >= 50
+                ? "bg-yellow-500"
+                : "bg-red-500"
+          }
+        />
+
+        <div className="flex justify-between items-center">
+          <span className="text-sm font-medium">平均入札者数</span>
+          <span className="text-sm font-bold text-primary">
+            {transparency.averageBidders.toFixed(1)}社
+          </span>
+        </div>
+
+        <div className="flex justify-between items-center">
+          <span className="text-sm font-medium">透明性スコア</span>
+          <span className="text-sm font-bold text-primary">
+            {transparency.transparencyScore.toFixed(1)}点
+          </span>
+        </div>
+        <PercentageBar
+          percentage={transparency.transparencyScore}
+          color={
+            transparency.transparencyScore >= 70
+              ? "bg-green-500"
+              : transparency.transparencyScore >= 50
+                ? "bg-yellow-500"
+                : "bg-red-500"
+          }
+        />
+      </div>
+
+      <InfoBox className="mt-4">
+        {transparency.transparencyScore >= 70
+          ? "良好: 競争性の高い契約が適切に行われています"
+          : transparency.transparencyScore >= 50
+            ? "注意: 競争性向上の余地があります"
+            : "要改善: 随意契約の割合が高く、競争性の向上が必要です"}
+        {transparency.singleBidderRatio !== undefined && (
+          <span className="block text-xs mt-1">
+            一者応札率: {transparency.singleBidderRatio.toFixed(1)}% (
+            {transparency.totalBiddingContracts || 0}件中の分析)
+          </span>
+        )}
+      </InfoBox>
+    </CardContent>
+  </Card>
+);
+
+interface ExpenseAnalysisCardProps {
+  expenseAnalysis: {
+    byType: Array<{
+      type: string;
+      amount: number;
+      percentage: number;
+    }>;
+    totalExpenseRecords: number;
+  };
+  className?: string;
+}
+
+const ExpenseAnalysisCard = ({
+  expenseAnalysis,
+  className,
+}: ExpenseAnalysisCardProps) => (
+  <Card className={className}>
+    <CardHeader>
+      <SectionTitle
+        title="費目別支出分析"
+        icon={<Eye className="w-5 h-5" />}
+        tooltip="政府支出の用途を費目別に分類した分析です。予算がどのような目的で使われているかを確認できます。"
+      />
+    </CardHeader>
+    <CardContent>
+      <div className="space-y-3">
+        {expenseAnalysis.byType.slice(0, 5).map((item) => (
+          <div key={item.type} className="flex justify-between items-center">
+            <span className="text-sm font-medium truncate max-w-[150px]">
+              {item.type}
+            </span>
+            <div className="text-right">
+              <span className="text-sm font-bold text-primary">
+                {formatCurrency(item.amount)}
+              </span>
+              <span className="text-xs text-muted-foreground ml-2">
+                ({item.percentage.toFixed(1)}%)
+              </span>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <InfoBox className="mt-4">
+        費目別データ: {expenseAnalysis.totalExpenseRecords.toLocaleString()}
+        件の詳細支出を分析
+      </InfoBox>
+    </CardContent>
+  </Card>
+);
 interface DashboardData {
   summary: {
     totalAmount: number;
@@ -153,6 +289,7 @@ interface DashboardData {
   ministryBreakdown: Array<{
     ministry: string;
     amount: number;
+    projects: number;
     percentage: number;
   }>;
   contractTypes: Array<{
@@ -172,6 +309,21 @@ interface DashboardData {
     ministry: string;
     id?: string;
   }>;
+  expenseAnalysis: {
+    byType: Array<{
+      type: string;
+      amount: number;
+      percentage: number;
+    }>;
+    totalExpenseRecords: number;
+  };
+  transparency: {
+    competitiveContractRatio: number;
+    averageBidders: number;
+    transparencyScore: number;
+    singleBidderRatio?: number;
+    totalBiddingContracts?: number;
+  };
 }
 
 /**
@@ -273,7 +425,7 @@ export default async function DashboardPage() {
   // 各セクションの説明文
   const sectionDescriptions = {
     ministryBreakdown:
-      "国の各府省庁ごとの支出額と構成比を表示しています。どの分野に多くの予算が配分されているかを把握できます。",
+      "国の各府省庁ごとの支出額と事業数を表示しています。どの分野に多くの予算が配分され、どの程度の事業が実施されているかを把握できます。",
     contractTypes:
       "一般競争入札や随意契約など、契約方式ごとの件数比率を示しています。競争性指標は透明性の目安となります。",
     sizeDistribution:
@@ -288,8 +440,11 @@ export default async function DashboardPage() {
     uniqueContractors: "政府と契約を結んでいる企業・団体の総数です。",
     averageAmount:
       "1件あたりの平均契約金額です。事業規模の平均的な水準を示しています。",
+    transparency:
+      "政府契約の透明性と競争性を数値化した指標です。競争入札の比率などから算出されます。",
+    expenseAnalysis:
+      "政府支出を費目別に分類した分析です。役務費、印刷製本費、通信運搬費など、具体的な用途を確認できます。",
   };
-
   return (
     <TooltipProvider delayDuration={100} skipDelayDuration={500}>
       {/* 1. ヘッダ概要セクション */}
@@ -318,26 +473,15 @@ export default async function DashboardPage() {
             tooltip={sectionDescriptions.ministryBreakdown}
             items={data.ministryBreakdown.map((item) => ({
               label: item.ministry,
-              value: formatCurrency(item.amount),
+              value: `${formatCurrency(item.amount)} | ${item.projects}事業`,
               percentage: item.percentage,
             }))}
             infoText={`上位3府省庁で ${topThreeShare.toFixed(1)}% を占めています`}
             className="lg:col-span-2"
           />
 
-          {/* 3. 契約方式別分析 */}
-          <PercentageListCard
-            title="契約方式別分析"
-            icon={<Award className="w-5 h-5" />}
-            tooltip={sectionDescriptions.contractTypes}
-            items={data.contractTypes.slice(0, 3).map((item) => ({
-              label: item.type,
-              value: "",
-              percentage: item.percentage,
-            }))}
-            infoText={`競争性指標: ${data.summary.competitiveness.toFixed(1)}%`}
-            showBars={false}
-          />
+          {/* 3. 契約透明性指標 */}
+          <TransparencyCard transparency={data.transparency} />
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
@@ -355,15 +499,29 @@ export default async function DashboardPage() {
             tooltip={sectionDescriptions.uniqueContractors}
           />
           <StatCard
-            title="平均契約額"
-            value={formatCurrency(data.summary.averageAmount)}
-            icon={<TrendingUp className="w-4 h-4" />}
-            tooltip={sectionDescriptions.averageAmount}
+            title="契約透明性"
+            value={`${data.summary.competitiveness.toFixed(1)}%`}
+            icon={<Shield className="w-4 h-4" />}
+            tooltip={sectionDescriptions.transparency}
           />
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-          {/* 5. 事業規模分布 */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+          {/* 5. 契約方式別分析 */}
+          <PercentageListCard
+            title="契約方式別分析"
+            icon={<Award className="w-5 h-5" />}
+            tooltip={sectionDescriptions.contractTypes}
+            items={data.contractTypes.slice(0, 5).map((item) => ({
+              label: item.type,
+              value: `${item.count}件`,
+              percentage: item.percentage,
+            }))}
+            infoText={`競争性指標: ${data.summary.competitiveness.toFixed(1)}%`}
+            showBars={true}
+          />
+
+          {/* 6. 事業規模分布 */}
           <PercentageListCard
             title="事業規模分布"
             icon={<BarChart3 className="w-5 h-5" />}
@@ -382,7 +540,12 @@ export default async function DashboardPage() {
             })()}
           />
 
-          {/* 6. 契約先分析 */}
+          {/* 7. 費目別支出分析 */}
+          <ExpenseAnalysisCard expenseAnalysis={data.expenseAnalysis} />
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+          {/* 8. 主要契約先 */}
           <Card>
             <CardHeader>
               <SectionTitle
@@ -406,18 +569,21 @@ export default async function DashboardPage() {
                         {item.contractor}
                       </span>
                     </div>
-                    <span className="text-sm text-muted-foreground">
-                      {formatCurrency(item.amount)}
-                    </span>
+                    <div className="text-right">
+                      <span className="text-sm text-muted-foreground">
+                        {formatCurrency(item.amount)}
+                      </span>
+                      <span className="text-xs text-muted-foreground block">
+                        {item.count}件
+                      </span>
+                    </div>
                   </div>
                 ))}
               </div>
             </CardContent>
           </Card>
-        </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-          {/* 7. 高額契約案件 */}
+          {/* 9. 高額契約案件 */}
           <Card>
             <CardHeader>
               <SectionTitle
@@ -452,31 +618,70 @@ export default async function DashboardPage() {
               </div>
             </CardContent>
           </Card>
+        </div>
 
-          {/* 8. データ出典 */}
+        <div className="grid grid-cols-1 lg:grid-cols-1 gap-6 mb-8">
+          {/* 10. データ出典と詳細情報 */}
           <Card>
             <CardHeader>
               <SectionTitle
-                title="データ出典"
-                icon={<Clock className="w-5 h-5" />}
+                title="データ出典と分析詳細"
+                icon={<Database className="w-5 h-5" />}
                 tooltip={sectionDescriptions.dataSource}
               />
             </CardHeader>
             <CardContent>
-              <div className="space-y-3">
-                <div className="flex items-center space-x-2">
-                  <Database className="w-4 h-4 text-muted-foreground" />
-                  <a
-                    href="https://rssystem.go.jp/download-csv/2024"
-                    target="blank"
-                    className="text-sm"
-                  >
-                    行政事業レビューデータ
-                  </a>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="space-y-2">
+                  <h4 className="text-sm font-semibold">データソース</h4>
+                  <div className="flex items-center space-x-2">
+                    <Database className="w-4 h-4 text-muted-foreground" />
+                    <a
+                      href="https://rssystem.go.jp/download-csv/2024"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-sm text-blue-600 hover:underline"
+                    >
+                      行政事業レビューデータ
+                    </a>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    最終更新:{" "}
+                    {data.summary.lastUpdated || "データベースから取得"}
+                  </p>
                 </div>
-                <InfoBox>
-                  最終更新: {data.summary.lastUpdated || "データベースから取得"}
-                </InfoBox>
+
+                <div className="space-y-2">
+                  <h4 className="text-sm font-semibold">分析範囲</h4>
+                  <p className="text-xs text-muted-foreground">
+                    • 支出情報: {data.summary.totalProjects.toLocaleString()}
+                    件の事業
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    • 費目詳細:{" "}
+                    {data.expenseAnalysis.totalExpenseRecords.toLocaleString()}
+                    件の支出記録
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    • 契約先: {data.summary.uniqueContractors.toLocaleString()}
+                    社・団体
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <h4 className="text-sm font-semibold">透明性指標</h4>
+                  <p className="text-xs text-muted-foreground">
+                    競争入札率:{" "}
+                    {data.transparency.competitiveContractRatio.toFixed(1)}%
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    透明性スコア:{" "}
+                    {data.transparency.transparencyScore.toFixed(1)}点
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    総支出額: {formatCurrency(data.summary.totalAmount)}
+                  </p>
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -485,7 +690,7 @@ export default async function DashboardPage() {
         {/* フッター情報 */}
         <div className="text-center text-sm text-muted-foreground">
           <p>
-            このダッシュボードは、国民が「今年のお金の全体像と特徴を10秒で理解できる」ことを目的としています。
+            このダッシュボードは、国民が「政府支出の全体像と健全性を理解できる」ことを目的としています。
           </p>
         </div>
       </div>
