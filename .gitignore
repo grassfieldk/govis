@@ -40,6 +40,13 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
+# localhost supabase
+/supabase/
+
+# input data
+/input/*
+!/input/.gitkeep
+
 # working directory
-work/*
-!work/README.md
+/work/*
+!/work/README.md

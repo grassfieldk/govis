@@ -34,8 +34,11 @@
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
+    "@types/pg": "^8.15.5",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "pg": "^8.16.3",
+    "supabase": "^2.47.2",
     "tailwindcss": "^4",
     "tsx": "^4.20.5",
     "tw-animate-css": "^1.3.7",

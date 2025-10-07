@@ -6,8 +6,7 @@
 
 import * as fs from "node:fs";
 import * as path from "node:path";
-
-const table_prefix = "govis";
+import { tablePrefix } from "./table-prefix";
 
 async function main() {
   const dir = process.argv[2];
@@ -34,7 +33,7 @@ async function main() {
   }[] = [];
 
   files.forEach((file, i) => {
-  const table_physical_name = `${table_prefix}_table_${String(i + 1).padStart(2, "0")}`;
+    const table_physical_name = `${tablePrefix}_table_${String(i + 1).padStart(2, "0")}`;
     const table_logical_name = file.replace(/\.csv$/i, "");
     const filePath = path.join(dir, file);
     const content = fs.readFileSync(filePath, "utf-8");
@@ -51,13 +50,13 @@ async function main() {
       columns,
     });
 
-  // 物理名ヘッダで新しい CSV を物理テーブル名で出力
-  const physicalHeader = columns.map((c) => c.column_physical_name).join(",");
-  const convertedCsvName = `${table_physical_name}.csv`;
-  const convertedCsvPath = path.join(convertedDir, convertedCsvName);
-  const restLines = lines.slice(1);
-  const outputContent = [physicalHeader, ...restLines].join("\n");
-  fs.writeFileSync(convertedCsvPath, outputContent, "utf-8");
+    // 物理名ヘッダで新しい CSV を物理テーブル名で出力
+    const physicalHeader = columns.map((c) => c.column_physical_name).join(",");
+    const convertedCsvName = `${table_physical_name}.csv`;
+    const convertedCsvPath = path.join(convertedDir, convertedCsvName);
+    const restLines = lines.slice(1);
+    const outputContent = [physicalHeader, ...restLines].join("\n");
+    fs.writeFileSync(convertedCsvPath, outputContent, "utf-8");
   });
 
   console.log(JSON.stringify(tables, null, 2));
