@@ -1,7 +1,7 @@
 
 # CSV データのデータベース化
 
-https://rssystem.go.jp/download-csv から入手したデータを加工しデータベース化する
+https://rssystem.go.jp/download-csv から入手したデータを加工し Supabase データベースにデータを登録する
 元データには表記ゆれやカラム重複があるため、スクリプトで正規化を行う
 
 ### テーブル・ビュー一覧
@@ -63,13 +63,13 @@ LIMIT 10;
 
 すべてのカラムに対して無効文字の除去を実施
 
-| 処理内容       | 詳細                                                            |
+| 処理内容       | 詳細                                      |
 | -------------- | --------------------------------------------------------------- |
-| NULL 文字除去  | `\x00` を削除                                                   |
-| 制御文字除去   | `\x00-\x1F`, `\x7F` を空白に置換                                |
-| 改行コード統一 | `\r\n`, `\r` → `\n`                                             |
-| 前後空白除去   | `strip()`                                                       |
-| 欠損値統一     | `"－"`, `"─"`, `"—"`, `"該当なし"`, `"なし"`, `"無し"` → `NULL` |
+| NULL 文字除去  | `\x00` を削除                             |
+| 制御文字除去   | `\x00-\x1F`, `\x7F` を空白に置換          |
+| 改行コード統一 | `\r\n`, `\r` → `\n`                      |
+| 前後空白除去   | `strip()`                                 |
+| 欠損値統一     | `－`, `なし`, `無し` などを `NULL` に変換 |
 
 ### 正規化（一部のみ）
 
@@ -88,6 +88,18 @@ LIMIT 10;
 - 年度・フラグ・金額などは型変換を行わず TEXT 型で保持
 - データの欠損・変換失敗による情報喪失を防ぐ
 - 必要に応じてクエリ時に `CAST()` で変換
+
+### カラム名の意味的正確性
+
+CSV の日本語カラム名を英語に翻訳する際、文脈を考慮して意味的に正確な名前を付与
+
+**修正例:**
+- `budget_items.所管` → `jurisdiction`（単純に `ministry` とせず、「所管」の意味を正確に反映）
+- `budget_items.項` → `budget_item`（法令の「項」と区別するため文脈を追加）
+- `laws.項` → `law_paragraph`（予算の「項」と区別）
+- `laws.号・号の細分` → `law_item_subdivision`（法令用語として正確に表現）
+
+各カラムの元の CSV カラム名は PostgreSQL の `COMMENT ON COLUMN` で保存され、`\d+` コマンドで確認可能
 
 
 ## セクションごとの詳細
@@ -112,6 +124,12 @@ LIMIT 10;
 
 ## 設計
 
+### データベース
+
+Supabase (PostgreSQL) を使用
+- テーブル定義: `supabase/seed.sql`
+- ビュー定義: `supabase/seed.sql` (テーブル定義の後に記載)
+
 ### 構成
 
 ```
@@ -122,9 +140,12 @@ tools/
 │   ├─ common.py            # 共通関数（sanitize, normalize, load_csv）
 │   ├─ basic_info.py        # 基本情報セクション
 │   ├─ budget_execution.py  # 予算・執行セクション
-│   ├─ expenditure.py       # 支出先セクション
-│   └─ create_views.sql     # ビュー定義
-├─ requirements.txt
+│   └─ expenditure.py       # 支出先セクション
+├─ supabase.sh              # Supabase 環境構築スクリプト
+└─ requirements.txt
+
+supabase/
+└─ seed.sql                  # テーブル・ビュー定義（自動実行）
 ```
 
 ### ドキュメント
@@ -140,16 +161,17 @@ docs/tools/build_database/
 
 #### メインスクリプト（`build_database.py`）
 
-各セクションの処理を統合してデータベースを生成する
+各セクションの処理を統合して Supabase にデータを投入する
 
 **主要な処理フロー:**
-1. 基本情報セクションのテーブル構築
-2. 予算・執行セクションのテーブル構築
-3. 支出先セクションのテーブル構築
-4. SQLite への書き込み
-5. データ検証
+1. `.env` から Supabase 接続情報を読み込み（`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`）
+2. Supabase クライアントを作成
+3. Zip ファイルを解凍して CSV ファイルを抽出
+4. 基本情報セクションのテーブル構築（メモリ上）
+5. 予算・執行セクションのテーブル構築（メモリ上）
+6. 支出先セクションのテーブル構築（メモリ上）
+7. Supabase へのデータ投入（バッチサイズ 1000）
 
-**出力:** `tools/output/rs_data.sqlite`
 
 #### 基本情報セクション（`basic_info.py`）
 
@@ -217,25 +239,37 @@ docs/tools/build_database/
 ```bash
 cd /home/grassfield/git/_team-mirai/govis
 
-# 仮想環境の作成（初回のみ）
+# 1. 仮想環境の作成（初回のみ）
 python3 -m venv tools/.venv
 source tools/.venv/bin/activate
 pip install -r tools/requirements.txt
 
-# RS システムからダウンロードした Zip ファイルを tools/input/ に配置
+# 2. RS システムからダウンロードした Zip ファイルを tools/input/ に配置
 
-# データベース生成（Zip 解凍、CSV 処理、データベース構築）
-tools/.venv/bin/python3 tools/build_database.py
+# 3. Supabase の起動とテーブル作成
+bash tools/supabase.sh
+
+# 4. データ投入
+source tools/.venv/bin/activate
+python tools/build_database.py
 ```
 
 **処理の流れ:**
+
+### 3. Supabase の起動とテーブル作成 (`supabase.sh`)
+1. Supabase 環境の初期化（初回のみ）
+2. Supabase サーバーの起動
+3. データベースのリセット（`supabase/seed.sql` を実行してテーブル・ビューを作成）
+4. 接続情報を `.env` に書き込み
+
+### 4. データ投入 (`build_database.py`)
 1. `tools/input/*.zip` を `tools/input/csv/` に解凍
 2. 解凍された CSV ファイルを `csv/` 直下に配置
-3. CSV ファイルからデータベースを構築
-4. ビューを適用
+3. CSV ファイルから DataFrame を構築
+4. Supabase にデータを投入（バッチサイズ 1000）
 
 **出力:**
-- `tools/output/rs_data.sqlite`
+- Supabase データベースにデータが登録される
 
 ## ER図
 

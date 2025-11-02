@@ -4,17 +4,26 @@
 
 ## 概要
 
-- **対象データ**: `tools/input/2-*_RS_2024_*.zip`（2ファイル、計 93,592 行）
-- **出力テーブル**: 2テーブル（`budget_summary`, `budget_detail`）
+- **対象データ**: `tools/input/2-*_RS_2024_*.zip`（2ファイル）
+- **出力テーブル**: 2テーブル（`budgets`, `budget_items`）
 - **文字コード**: UTF-8 with BOM
 
 **共通の正規化方針**: [../build_database.md](../build_database.md#共通の正規化方針) を参照
 
 
+## カラム名の命名方針
+
+CSV の日本語カラム名を英語に翻訳する際、意味的な正確性を重視して以下の命名を採用:
+
+| CSV カラム名 | 採用カラム名 | 理由 |
+|------------|------------|------|
+| 所管 | `jurisdiction` | 「所管」は管轄・監督権限を意味し、単純な「府省庁」とは異なる |
+| 項 | `budget_item` | 法令テーブルの「項（law_paragraph）」と区別 |
+
+
 ## 正規化対象カラム
 
 **名称系**
-- 事業名
 - 府省庁
 - 政策所管府省庁
 - 局・庁
@@ -40,14 +49,15 @@
 
 ## 出力テーブル構造
 
-### `budget_summary`（予算・執行サマリ）
+### `budgets`（予算・執行サマリ）
 
 データソース: `2-1_予算・執行_サマリ.csv`
 
-**特徴**:
-- 1 事業・1 予算年度につき複数行存在（会計区分ごとの明細行 + 合計行）
+**設計:**
+- 1 事業・1 予算年度につき複数行（会計区分ごとの明細行 + 合計行）
 - 合計行は `会計区分` が空で識別
 - 金額カラムは TEXT 型で保持（全角数字・カンマ混在の可能性）
+- project_name は `projects_master` から JOIN で取得
 
 ```json
 {
@@ -55,7 +65,6 @@
   "columns": {
     "project_year": { "type": "INTEGER", "normalize": false, "note": "事業年度" },
     "project_id": { "type": "TEXT", "normalize": false, "note": "予算事業ID" },
-    "project_name": { "type": "TEXT", "normalize": true },
     "budget_year": { "type": "INTEGER", "normalize": false, "note": "予算年度" },
     "seq_no": { "type": "INTEGER", "normalize": false, "note": "連番（会計区分ごと）" },
     "account_category": { "type": "TEXT", "normalize": false, "note": "会計区分（空=合計行）" },
@@ -85,13 +94,14 @@
 }
 ```
 
-### `budget_detail`（歳出予算項目の詳細）
+### `budget_items`（歳出予算項目の詳細）
 
 データソース: `2-2_予算・執行_予算種別・歳出予算項目.csv`
 
-**特徴**:
+**設計:**
 - 1 事業・1 予算年度につき、歳出予算項目（目）ごとに 1 行
 - 予算種別: `当初予算`, `第1次補正予算`, `第2次補正予算`, ...
+- project_name は `projects_master` から JOIN で取得
 
 ```json
 {
@@ -99,16 +109,15 @@
   "columns": {
     "project_year": { "type": "INTEGER", "normalize": false, "note": "事業年度" },
     "project_id": { "type": "TEXT", "normalize": false, "note": "予算事業ID" },
-    "project_name": { "type": "TEXT", "normalize": true },
     "budget_year": { "type": "INTEGER", "normalize": false, "note": "予算年度" },
     "seq_no": { "type": "INTEGER", "normalize": false, "note": "連番（歳出予算項目ごと）" },
     "account_category": { "type": "TEXT", "normalize": false, "note": "会計区分" },
     "account": { "type": "TEXT", "normalize": true, "note": "会計" },
     "sub_account": { "type": "TEXT", "normalize": true, "note": "勘定" },
     "budget_type": { "type": "TEXT", "normalize": false, "note": "予算種別" },
-    "ministry": { "type": "TEXT", "normalize": true, "note": "所管" },
+    "jurisdiction": { "type": "TEXT", "normalize": true, "note": "所管" },
     "organization": { "type": "TEXT", "normalize": true, "note": "組織・勘定" },
-    "item": { "type": "TEXT", "normalize": true, "note": "項" },
+    "budget_item": { "type": "TEXT", "normalize": true, "note": "項" },
     "category": { "type": "TEXT", "normalize": true, "note": "目" },
     "supplement_info": { "type": "TEXT", "normalize": true, "note": "歳出予算項目の補足情報" },
     "budget_amount": { "type": "TEXT", "normalize": false, "note": "予算額（歳出予算項目ごと）" },
@@ -167,7 +176,7 @@
 
 ### seq_no の採番
 
-**budget_summary, budget_detail 共通:**
+**budgets, budget_items 共通:**
 ```python
 df["seq_no"] = df.groupby(
     ["事業年度", "予算事業ID", "予算年度"]
@@ -175,4 +184,5 @@ df["seq_no"] = df.groupby(
 ```
 
 - 同一の `(事業年度, 予算事業ID, 予算年度)` 内で CSV の出現順に連番（1 から開始）
-- `budget_summary` では会計区分ごとの明細行と合計行を含む全行に連番
+- `budgets` では会計区分ごとの明細行と合計行を含む全行に連番
+

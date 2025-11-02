@@ -152,8 +152,8 @@ def build_laws_table(df: pd.DataFrame) -> pd.DataFrame:
     result["law_number"] = df_filtered["法令番号"]
     result["law_id"] = df_filtered["法令ID"]
     result["article"] = df_filtered["条"]
-    result["paragraph"] = df_filtered["項"]
-    result["item"] = df_filtered["号・号の細分"]
+    result["law_paragraph"] = df_filtered["項"]
+    result["law_item_subdivision"] = df_filtered["号・号の細分"]
 
     logger.info(f"  laws テーブル完成: {len(result):,} 行")
 

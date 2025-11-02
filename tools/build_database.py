@@ -2,14 +2,17 @@
 """
 データベース構築スクリプト
 
-tools/input/ 配下の Zip ファイルを解凍して SQLite データベースを生成する。
+tools/input/ 配下の Zip ファイルを解凍して Supabase データベースにデータを登録する。
 """
 
 import logging
+import os
 import shutil
-import sqlite3
 import zipfile
 from pathlib import Path
+
+from dotenv import load_dotenv
+from supabase import create_client, Client
 
 from build_database.basic_info import build_basic_info_tables
 from build_database.budget_execution import build_budget_execution_tables
@@ -20,6 +23,9 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent
 ZIP_DIR = PROJECT_ROOT / "tools" / "input"
 CSV_DIR = PROJECT_ROOT / "tools" / "input" / "csv"
 OUTPUT_DIR = PROJECT_ROOT / "tools" / "output"
+
+# .env ファイルの読み込み
+load_dotenv(PROJECT_ROOT / ".env")
 
 # ロギング設定
 logging.basicConfig(
@@ -96,6 +102,17 @@ def main():
     logger.info("データベース構築開始")
     logger.info("=" * 60)
 
+    # Supabase 接続情報を取得
+    supabase_url = os.getenv("NEXT_PUBLIC_SUPABASE_URL")
+    supabase_key = os.getenv("NEXT_PUBLIC_SUPABASE_ANON_KEY")
+
+    if not supabase_url or not supabase_key:
+        logger.error("環境変数 NEXT_PUBLIC_SUPABASE_URL または NEXT_PUBLIC_SUPABASE_ANON_KEY が設定されていません")
+        return
+
+    supabase: Client = create_client(supabase_url, supabase_key)
+    logger.info("Supabase に接続しました")
+
     # Zip ファイルの解凍
     extract_zip_files(ZIP_DIR, CSV_DIR)
 
@@ -114,45 +131,26 @@ def main():
     # 全テーブルを統合
     tables = {**basic_info_tables, **budget_execution_tables, **expenditure_tables}
 
-    # SQLite に書き込み
+    # Supabase に書き込み
     logger.info("\n" + "=" * 60)
-    logger.info("SQLite に書き込み")
+    logger.info("Supabase に書き込み")
     logger.info("=" * 60)
 
-    output_path = OUTPUT_DIR / "rs_data.sqlite"
-    conn = sqlite3.connect(output_path)
+    for table_name, df in tables.items():
+        logger.info(f"  {table_name} テーブル書き込み中... ({len(df):,} 行)")
+        records = df.to_dict('records')
 
-    try:
-        for table_name, df in tables.items():
-            df.to_sql(table_name, conn, if_exists="replace", index=False)
-            logger.info(f"  {table_name} テーブル書き込み完了")
+        # バッチサイズを指定して分割アップロード
+        batch_size = 1000
+        for i in range(0, len(records), batch_size):
+            batch = records[i:i + batch_size]
+            supabase.table(table_name).upsert(batch).execute()  # type: ignore
 
-    finally:
-        conn.close()
+        logger.info(f"  {table_name} テーブル書き込み完了")
 
-    # ビューの適用
-    logger.info("\n" + "=" * 60)
-    logger.info("ビューの適用")
     logger.info("=" * 60)
-
-    create_views_sql = Path(__file__).parent / "build_database" / "create_views.sql"
-    if create_views_sql.exists():
-        import subprocess
-        result = subprocess.run(
-            ["sqlite3", str(output_path), "-init", str(create_views_sql), ".quit"],
-            capture_output=True,
-            text=True
-        )
-        if result.returncode == 0:
-            logger.info("ビューの適用が完了しました")
-        else:
-            logger.error(f"ビューの適用に失敗しました: {result.stderr}")
-    else:
-        logger.warning(f"create_views.sql が見つかりません: {create_views_sql}")
-
-    logger.info(f"\n出力: {output_path}")
-    logger.info("\n" + "=" * 60)
     logger.info("完了")
+    logger.info("=" * 60)
     logger.info("=" * 60)
 
 
