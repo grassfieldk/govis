@@ -4,135 +4,10 @@
 https://rssystem.go.jp/download-csv から入手したデータを加工し Supabase データベースにデータを登録する
 元データには表記ゆれやカラム重複があるため、スクリプトで正規化を行う
 
-### テーブル・ビュー一覧
 
-| 種別     | 名前                                 | 説明                                                      |
-| -------- | ------------------------------------ | --------------------------------------------------------- |
-| テーブル | `projects_master`                    | 事業の基本情報マスタ（project_name を含む唯一のテーブル） |
-| テーブル | `policies`                           | 政策・施策の詳細                                          |
-| テーブル | `laws`                               | 法令の詳細                                                |
-| テーブル | `subsidies`                          | 補助率の詳細                                              |
-| テーブル | `related_projects`                   | 関連事業の詳細                                            |
-| テーブル | `budgets`                            | 予算・執行のサマリ                                        |
-| テーブル | `budget_items`                       | 歳出予算項目の詳細                                        |
-| テーブル | `expenditures`                       | 支出先情報                                                |
-| テーブル | `expenditure_flows`                  | 支出先ブロックの資金の流れ                                |
-| テーブル | `expenditure_usages`                 | 費目・使途の詳細                                          |
-| テーブル | `expenditure_contracts`              | 国庫債務負担行為等の契約情報                              |
-| ビュー   | `policies_with_project`              | 政策情報 + 事業名                                         |
-| ビュー   | `laws_with_project`                  | 法令情報 + 事業名                                         |
-| ビュー   | `subsidies_with_project`             | 補助率情報 + 事業名                                       |
-| ビュー   | `related_projects_with_project`      | 関連事業情報 + 事業名                                     |
-| ビュー   | `budgets_with_project`               | 予算サマリ + 事業名                                       |
-| ビュー   | `budget_items_with_project`          | 予算項目 + 事業名                                         |
-| ビュー   | `expenditures_with_project`          | 支出先情報 + 事業名                                       |
-| ビュー   | `expenditure_flows_with_project`     | 支出ブロックの流れ + 事業名                               |
-| ビュー   | `expenditure_usages_with_project`    | 費目・使途 + 事業名                                       |
-| ビュー   | `expenditure_contracts_with_project` | 契約情報 + 事業名                                         |
-| ビュー   | `projects_summary`                   | 事業ごとの関連情報サマリ                                  |
+## プログラム構成
 
-### クエリ例
-
-```sql
--- ビューを使った簡単なクエリ
-SELECT * FROM expenditures_with_project
-WHERE ministry = '内閣府'
-ORDER BY amount DESC LIMIT 10;
-
--- 事業サマリを取得
-SELECT * FROM projects_summary
-WHERE policy_count > 0 OR expenditure_count > 0
-ORDER BY expenditure_count DESC;
-
--- テーブルを直接 JOIN する場合
-SELECT
-    pm.project_name,
-    e.recipient_name,
-    e.amount
-FROM expenditures e
-JOIN projects_master pm USING (project_year, project_id)
-WHERE e.amount IS NOT NULL
-ORDER BY CAST(e.amount AS INTEGER) DESC
-LIMIT 10;
-```
-
-
-## 共通の正規化方針
-
-### サニタイズ（全カラム）
-
-すべてのカラムに対して無効文字の除去を実施
-
-| 処理内容       | 詳細                                      |
-| -------------- | --------------------------------------------------------------- |
-| NULL 文字除去  | `\x00` を削除                             |
-| 制御文字除去   | `\x00-\x1F`, `\x7F` を空白に置換          |
-| 改行コード統一 | `\r\n`, `\r` → `\n`                      |
-| 前後空白除去   | `strip()`                                 |
-| 欠損値統一     | `－`, `なし`, `無し` などを `NULL` に変換 |
-
-### 正規化（一部のみ）
-
-自由記述テキストのみ正規化ライブラリ [neologdn](https://github.com/ikegami-yukino/neologdn) を使用
-
-正規化内容:
-- 全角半角の統一
-- Unicode NFKC 正規化
-- 長音符・波ダッシュの統一
-- 連続する空白の削除
-
-正規化対象カラムは各セクションのドキュメントで定義する
-
-### データ保持方針
-
-- 年度・フラグ・金額などは型変換を行わず TEXT 型で保持
-- データの欠損・変換失敗による情報喪失を防ぐ
-- 必要に応じてクエリ時に `CAST()` で変換
-
-### カラム名の意味的正確性
-
-CSV の日本語カラム名を英語に翻訳する際、文脈を考慮して意味的に正確な名前を付与
-
-**修正例:**
-- `budget_items.所管` → `jurisdiction`（単純に `ministry` とせず、「所管」の意味を正確に反映）
-- `budget_items.項` → `budget_item`（法令の「項」と区別するため文脈を追加）
-- `laws.項` → `law_paragraph`（予算の「項」と区別）
-- `laws.号・号の細分` → `law_item_subdivision`（法令用語として正確に表現）
-
-各カラムの元の CSV カラム名は PostgreSQL の `COMMENT ON COLUMN` で保存され、`\d+` コマンドで確認可能
-
-
-## セクションごとの詳細
-
-各セクションのテーブル設計と正規化対象カラムの詳細は以下を参照:
-
-- **基本情報セクション**: [build_database/basic_info.md](./build_database/basic_info.md)
-  - 対象: `tools/input/1-*_RS_2024_*.zip`
-  - 出力: 5テーブル（`projects_master`, `policies`, `laws`, `subsidies`, `related_projects`）
-  - **注**: `projects_master` がマスタテーブルとなり、他のテーブルはこれを参照
-
-- **予算・執行セクション**: [build_database/budget_execution.md](./build_database/budget_execution.md)
-  - 対象: `tools/input/2-*_RS_2024_*.zip`
-  - 出力: 2テーブル（`budgets`, `budget_items`）
-  - **注**: `project_name` は削除済み、`projects_master` との JOIN で取得
-
-- **支出先セクション**: [build_database/expenditure.md](./build_database/expenditure.md)
-  - 対象: `tools/input/5-*_RS_2024_*.zip`
-  - 出力: 4テーブル（`expenditures`, `expenditure_flows`, `expenditure_usages`, `expenditure_contracts`）
-  - **注**: `project_name` は削除済み、`projects_master` との JOIN で取得
-
-
-## 設計
-
-### データベース
-
-Supabase (PostgreSQL) を使用
-- テーブル定義: `supabase/seed.sql`
-- ビュー定義: `supabase/seed.sql` (テーブル定義の後に記載)
-
-### 構成
-
-```
+```plaintext
 tools/
 ├─ build_database.py         # メインスクリプト
 ├─ build_database/
@@ -148,239 +23,101 @@ supabase/
 └─ seed.sql                  # テーブル・ビュー定義（自動実行）
 ```
 
-### ドキュメント
 
-```
-docs/tools/build_database/
-├─ basic_info.md             # 基本情報セクションの正規化方針
-├─ budget_execution.md       # 予算・執行セクションの正規化方針
-└─ expenditure.md            # 支出先セクションの正規化方針
-```
+## 処理概要
 
-### 実装
-
-#### メインスクリプト（`build_database.py`）
-
-各セクションの処理を統合して Supabase にデータを投入する
-
-**主要な処理フロー:**
 1. `.env` から Supabase 接続情報を読み込み（`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`）
-2. Supabase クライアントを作成
-3. Zip ファイルを解凍して CSV ファイルを抽出
-4. 基本情報セクションのテーブル構築（メモリ上）
-5. 予算・執行セクションのテーブル構築（メモリ上）
-6. 支出先セクションのテーブル構築（メモリ上）
-7. Supabase へのデータ投入（バッチサイズ 1000）
+2. Zip ファイルを解凍し CSV ファイルを抽出
+3. 各セクションのテーブル構築
+4. Supabase へのデータ投入
 
 
-#### 基本情報セクション（`basic_info.py`）
+## テーブル正規化
 
-`tools/input/1-*.csv` から5つのテーブルを構築する
+セクションごとにテーブルを作成
 
-**構築するテーブル（正規化済み）:**
-- `projects_master`: 事業基本情報マスタ（1-1 と 1-2 を結合）- **project_name を含む唯一のテーブル**
-- `policies`: 政策・施策との紐付け（1-3 から抽出）- project_name なし
-- `laws`: 法令との紐付け（1-3 から抽出）- project_name なし
-- `subsidies`: 補助率情報（1-4）- project_name なし
-- `related_projects`: 関連事業（1-5）- project_name なし
+### 基本情報セクション（basic_info.py）
 
-**主要な関数:**
-- `build_basic_info_tables()`: エントリーポイント
-- `build_projects_master_table()`: projects_master テーブルの構築
-- `build_policies_table()`: policies テーブルの構築
-- `build_laws_table()`: laws テーブルの構築
-- `build_subsidies_table()`: subsidies テーブルの構築
-- `build_related_projects_table()`: related_projects テーブルの構築
+**入力ファイル**: tools/input/csv/1-*.csv
 
-#### 予算・執行セクション（`budget_execution.py`）
+**出力テーブル**
+- `projects_master`: 事業基本情報マスタ（1-1 と 1-2 を結合）
+- `policies`: 政策・施策との紐付け（1-3 から抽出）
+- `laws`: 法令との紐付け（1-3 から抽出）
+- `subsidies`: 補助率情報（1-4）
+- `related_projects`: 関連事業（1-5）
 
-`tools/input/2-*.csv` から2つのテーブルを構築する
+### 予算・執行セクション（budget_execution.py）
 
-**構築するテーブル（正規化済み）:**
-- `budgets`: 予算・執行サマリ（2-1）- project_name なし
-- `budget_items`: 歳出予算項目の詳細（2-2）- project_name なし
+**入力ファイル**: tools/input/csv/2-*.csv
 
-**主要な関数:**
-- `build_budget_execution_tables()`: エントリーポイント
-- `build_budget_summary_table()`: budgets テーブルの構築
-- `build_budget_detail_table()`: budget_items テーブルの構築
+**出力テーブル**
+- `budgets`: 予算・執行サマリ（2-1）
+- `budget_items`: 歳出予算項目の詳細（2-2）
 
-#### 支出先セクション（`expenditure.py`）
+### 支出先セクション（expenditure.py）
 
-`tools/input/5-*.csv` から4つのテーブルを構築する
+**入力ファイル**: tools/input/csv/5-*.csv
 
-**構築するテーブル（正規化済み）:**
-- `expenditures`: 支出先情報（5-1）- project_name なし
-- `expenditure_flows`: 支出先ブロックのつながり（5-2）- project_name なし
-- `expenditure_usages`: 費目・使途（5-3）- project_name なし
-- `expenditure_contracts`: 国庫債務負担行為等による契約（5-4）- project_name なし
-
-**主要な関数:**
-- `build_expenditure_tables()`: エントリーポイント
-- `build_expenditure_info_table()`: expenditures テーブルの構築
-- `build_expenditure_flow_table()`: expenditure_flows テーブルの構築
-- `build_expenditure_usage_table()`: expenditure_usages テーブルの構築
-- `build_expenditure_contract_table()`: expenditure_contracts テーブルの構築
-
-#### 共通関数（`common.py`）
-
-全セクションで使用する共通的な処理を提供する
-
-**主要な関数:**
-- `sanitize()`: 制御文字除去・欠損値統一
-- `normalize()`: neologdn による正規化
-- `load_csv()`: CSV ファイル読み込み
-- `apply_sanitize_and_normalize()`: DataFrame へのサニタイズと正規化の適用
-- `validate_table()`: テーブル検証（行数、主キー重複、NULL率）
+**出力テーブル**
+- `expenditures`: 支出先情報（5-1）
+- `expenditure_flows`: 支出先ブロックのつながり（5-2）
+- `expenditure_usages`: 費目・使途（5-3）
+- `expenditure_contracts`: 国庫債務負担行為等による契約（5-4）
 
 
-## 実行方法
+## カラムデータ修正
 
-```bash
-cd /home/grassfield/git/_team-mirai/govis
+### サニタイズ（全カラム）
 
-# 1. 仮想環境の作成（初回のみ）
-python3 -m venv tools/.venv
-source tools/.venv/bin/activate
-pip install -r tools/requirements.txt
+すべてのカラムに対して無効文字の除去を実施
 
-# 2. RS システムからダウンロードした Zip ファイルを tools/input/ に配置
+| 処理内容       | 詳細                                      |
+| -------------- | ----------------------------------------- |
+| NULL 文字除去  | `\x00` を削除                             |
+| 制御文字除去   | `\x00-\x1F`, `\x7F` を空白に置換          |
+| 改行コード統一 | `\r\n`, `\r` を `\n` に統一               |
+| 前後空白除去   | `strip()`                                 |
+| 欠損値統一     | `－`, `なし`, `無し` などを `NULL` に変換 |
 
-# 3. Supabase の起動とテーブル作成
-bash tools/supabase.sh
+### データ正規化（一部のみ）
 
-# 4. データ投入
-source tools/.venv/bin/activate
-python tools/build_database.py
-```
+自由記述カラムに対して [neologdn](https://github.com/ikegami-yukino/neologdn) を使用し正規化
 
-**処理の流れ:**
+正規化内容:
+- 全角半角の統一
+- Unicode NFKC 正規化
+- 長音符・波ダッシュの統一
+- 連続する空白の削除
 
-### 3. Supabase の起動とテーブル作成 (`supabase.sh`)
-1. Supabase 環境の初期化（初回のみ）
-2. Supabase サーバーの起動
-3. データベースのリセット（`supabase/seed.sql` を実行してテーブル・ビューを作成）
-4. 接続情報を `.env` に書き込み
+正規化対象カラムは各セクションのドキュメントで定義する
 
-### 4. データ投入 (`build_database.py`)
-1. `tools/input/*.zip` を `tools/input/csv/` に解凍
-2. 解凍された CSV ファイルを `csv/` 直下に配置
-3. CSV ファイルから DataFrame を構築
-4. Supabase にデータを投入（バッチサイズ 1000）
 
-**出力:**
-- Supabase データベースにデータが登録される
+## テーブル・ビュー一覧
 
-## ER図
+[ER 図](../database/rs_data.mermaid)
 
-```mermaid
-erDiagram
-    %% 事業マスタ
-    PROJECTS_MASTER {
-        int project_year PK
-        text project_id PK
-        text project_name
-        text ministry
-        text bureau
-        text department
-        text division
-    }
-
-    %% 基本情報の詳細テーブル
-    POLICIES {
-        int project_year PK,FK
-        text project_id PK,FK
-        int seq_no PK
-        text policy_name
-        text measure_name
-    }
-
-    LAWS {
-        int project_year PK,FK
-        text project_id PK,FK
-        int seq_no PK
-        text law_name
-        text law_number
-    }
-
-    SUBSIDIES {
-        int project_year PK,FK
-        text project_id PK,FK
-        int seq_no PK
-        text subsidy_target
-        text subsidy_rate
-    }
-
-    RELATED_PROJECTS {
-        int project_year PK,FK
-        text project_id PK,FK
-        int seq_no PK
-        text related_project_id
-        text related_project_name
-    }
-
-    %% 予算・執行の詳細テーブル
-    BUDGETS {
-        int project_year PK,FK
-        text project_id PK,FK
-        int budget_year PK
-        int seq_no PK
-        text account_category
-        text initial_budget
-        text execution_amount
-    }
-
-    BUDGET_ITEMS {
-        int project_year PK,FK
-        text project_id PK,FK
-        int budget_year PK
-        int seq_no PK
-        text budget_type
-        text budget_amount
-    }
-
-    %% 支出先の詳細テーブル
-    EXPENDITURES {
-        int project_year PK,FK
-        text project_id PK,FK
-        int seq_no PK
-        text recipient_name
-        text amount
-    }
-
-    EXPENDITURE_FLOWS {
-        int project_year PK,FK
-        text project_id PK,FK
-        int seq_no PK
-        text source_block
-        text destination_block
-    }
-
-    EXPENDITURE_USAGES {
-        int project_year PK,FK
-        text project_id PK,FK
-        int seq_no PK
-        text expense_item
-        text usage
-    }
-
-    EXPENDITURE_CONTRACTS {
-        int project_year PK,FK
-        text project_id PK,FK
-        int seq_no PK
-        text contractor_name
-        text contract_amount
-    }
-
-    %% リレーション
-    PROJECTS_MASTER ||--o{ POLICIES : "has"
-    PROJECTS_MASTER ||--o{ LAWS : "has"
-    PROJECTS_MASTER ||--o{ SUBSIDIES : "has"
-    PROJECTS_MASTER ||--o{ RELATED_PROJECTS : "has"
-    PROJECTS_MASTER ||--o{ BUDGETS : "has"
-    PROJECTS_MASTER ||--o{ BUDGET_ITEMS : "has"
-    PROJECTS_MASTER ||--o{ EXPENDITURES : "has"
-    PROJECTS_MASTER ||--o{ EXPENDITURE_FLOWS : "has"
-    PROJECTS_MASTER ||--o{ EXPENDITURE_USAGES : "has"
-    PROJECTS_MASTER ||--o{ EXPENDITURE_CONTRACTS : "has"
-```
+| 種別     | 名前                                 | 説明                         |
+| -------- | ------------------------------------ | ---------------------------- |
+| テーブル | `projects_master`                    | 事業の基本情報マスタ         |
+| テーブル | `policies`                           | 政策・施策の詳細             |
+| テーブル | `laws`                               | 法令の詳細                   |
+| テーブル | `subsidies`                          | 補助率の詳細                 |
+| テーブル | `related_projects`                   | 関連事業の詳細               |
+| テーブル | `budgets`                            | 予算・執行のサマリ           |
+| テーブル | `budget_items`                       | 歳出予算項目の詳細           |
+| テーブル | `expenditures`                       | 支出先情報                   |
+| テーブル | `expenditure_flows`                  | 支出先ブロックの資金の流れ   |
+| テーブル | `expenditure_usages`                 | 費目・使途の詳細             |
+| テーブル | `expenditure_contracts`              | 国庫債務負担行為等の契約情報 |
+| ビュー   | `policies_with_project`              | 政策情報 + 事業名            |
+| ビュー   | `laws_with_project`                  | 法令情報 + 事業名            |
+| ビュー   | `subsidies_with_project`             | 補助率情報 + 事業名          |
+| ビュー   | `related_projects_with_project`      | 関連事業情報 + 事業名        |
+| ビュー   | `budgets_with_project`               | 予算サマリ + 事業名          |
+| ビュー   | `budget_items_with_project`          | 予算項目 + 事業名            |
+| ビュー   | `expenditures_with_project`          | 支出先情報 + 事業名          |
+| ビュー   | `expenditure_flows_with_project`     | 支出ブロックの流れ + 事業名  |
+| ビュー   | `expenditure_usages_with_project`    | 費目・使途 + 事業名          |
+| ビュー   | `expenditure_contracts_with_project` | 契約情報 + 事業名            |
+| ビュー   | `projects_summary`                   | 事業ごとの関連情報サマリ     |

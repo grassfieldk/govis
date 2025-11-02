@@ -4,7 +4,14 @@
 
 set -e
 
-echo "環境構築を開始..."
+echo "ローカル環境に Supabase を構築します"
+
+# Docker Compose がインストールされていない場合処理を終了
+if ! command -v docker-compose >/dev/null 2>&1 && { ! command -v docker >/dev/null 2>&1 || ! docker compose version >/dev/null 2>&1; }; then
+    echo "Docker Compose がインストールされていません" >&2
+    echo "https://docs.docker.com/engine/install を参考にインストールしてください" >&2
+    exit 1
+fi
 
 # プロジェクトルートディレクトリ
 PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -17,21 +24,21 @@ if [ ! -d "$PROJECT_ROOT/supabase" ]; then
     npx supabase init > /dev/null
     echo "Supabase 環境が作成されました"
 else
-    echo "Supabase 環境は既に作成されています"
+    echo "既存の Supabase 環境を使用します"
 fi
 
 # supabase start の実行（既に起動している場合はスキップ）
 if ! npx supabase status 2>&1 | grep -q "is running"; then
     echo "Supabase サーバーを起動します"
     npx supabase start > /dev/null
-    sleep 5
+    sleep 3
     echo "Supabase サーバーが起動しました"
 else
-    echo "Supabase サーバーは既に起動しています"
+    echo "起動している Supabase サーバーを使用します"
 fi
 
-# データベースのリセット（テーブル作成を含む）
-echo "データベースを初期化します（seed.sql を実行）"
+# データベースの初期化
+echo "データベースを初期化します"
 npx supabase db reset > /dev/null
 echo "データベースの初期化が完了しました"
 
@@ -62,3 +69,4 @@ else
 fi
 
 echo "Supabase の構築が完了しました"
+echo "README.md の手順に従い、データ投入を行ってください"

@@ -6,49 +6,27 @@
 
 ## 開発環境構築
 
-データベースとして Supabase を使用します
+本サイトは Next.js + Supabase で構築されます
+Supabase へのデータ登録を行ったのち Next.js を立ち上げる流れになります
 
-Supabase 環境を自分で構築する場合、[データベース作成](#データベース作成方法) に従ってください
+Windows の場合、WSL2 での開発を推奨します（本手順も WSL2 を使用する前提です）
 
-開発チーム共有の環境を使用する場合、リポジトリオーナーに尋ねるか、Slack で質問してください
 
-### 環境変数の設定
+### パッケージのインストール
 
-1. `.env.example` を コピーして `.env` を作成
-    ```bash
-    cp .env.example .env
-    ```
-2. 各変数の値を環境に応じて変更
-    - `NEXT_PUBLIC_URL`: サイトトップページとなるアドレス（ローカルの場合、ポートだけ確認すればよい）
-    - `NEXT_PUBLIC_SUPABASE_URL`: Supabase のプロジェクト URL
-    - `NEXT_PUBLIC_SUPABASE_ANON_KEY`: Supabase の anon_key
-    - `GOOGLE_API_KEY`: Gemini が使用可能な Goole API Key
-    - `GEMINI_MODEL`: 使用する Gemini モデル指定文字列（基本的に変更不要）
-
-### Node 環境初期化
-
-npm パッケージのインストールを行ってください
+Node.js と Python の環境を初期化する
 
 ```bash
+# Node.js
 npm install
+
+# Python
+python3 -m venv ./.venv
+source ./.venv/bin/activate
+pip install -r ./tools/requirements.txt
 ```
 
-
-## プログラムの起動
-
-開発環境として起動してください
-
-```bash
-npm run dev
-```
-
-
-## データベース作成方法
-
-メイン開発チームが使用している Supabase 環境にアクセスできない場合、自分でデータベースを作成する必要があります
-
-データベースとしては Supabase を使用しています
-基本的にはローカルで立ち上げる方法を推奨しますが、複数の PC で作業したい場合などはウェブ上で作成することもできます
+### Supabase へのデータ登録
 
 <details>
 <summary>Supabase とは</summary>
@@ -57,81 +35,84 @@ PostgreSQL をアプリケーション感覚で使用することができるオ
 DB サーバの立ち上げやユーザー管理などを考えずに Web API をインターフェイスとして手軽に PostgreSQL を利用することができる
 </details>
 
-### 1. CSV データのダウンロード
+[CSVデータのダウンロード](https://rssystem.go.jp/download-csv/2024) ページから、次のセクションのデータをすべてダウンロードする
 
-https://rssystem.go.jp/download-csv/2024 からすべての CSV データファイルをダウンロードする
-Zip ファイルになっているため解凍して CSV ファイルを取り出す
+- 基本情報
+- 予算・執行
+- 支出先
 
-### 2-A. Supabase 環境の作成（ローカル）
-
-ダウンロードしたファイルを input/ 配下に配置し、下記コマンドに従い環境作成とインポートを行う
+ダウンロードした Zip ファイルをすべて tools/input/ に配置する
 
 ```bash
-# Supabase 環境作成
-npx supabase init # 質問はすべて "n" と回答
-npx supabase start
-
-# スキーマ定義の生成とインポート用の CSV ファイル生成
-npx tsx ./tools/supabase/create-schema-info.ts ./input/ > ./src/data/schema-info.json
-
-# CSV ファイルのインポート
-npx tsx ./tools/supabase/import-csv-files.ts ./input/converted_csv/
+$ ls -1 ./tools/input/
+1-1_RS_2024_基本情報_組織情報.zip
+1-2_RS_2024_基本情報_事業概要等.zip
+1-3_RS_2024_基本情報_政策・施策、法令等.zip
+1-4_RS_2024_基本情報_補助率等.zip
+1-5_RS_2024_基本情報_関連事業.zip
+2-1_RS_2024_予算・執行_サマリ.zip
+2-2_RS_2024_予算・執行_予算種別・歳出予算項目.zip
+5-1_RS_2024_支出先_支出情報.zip
+5-2_RS_2024_支出先_支出ブロックのつながり.zip
+5-3_RS_2024_支出先_費目・使途.zip
+5-4_RS_2024_支出先_国庫債務負担行為等による契約.zip
 ```
 
-### 2-B. Supabase 環境の作成（ウェブ）
+配置した Zip ファイルからデータを抽出し、正規化した状態で Supabase に登録する
+スクリプトを使用しローカル環境に Supabase 環境を構築できるようになっているが、
+既存の Supabase 環境を利用することも可能
 
-https://supabase.com/ でプロジェクトを作成しておく
+#### ローカル環境に新しく Supabase を構築する場合
 
-使用する Supabase プロジェクトを開き、ダウンロードした CSV データをインポート
+スクリプトを実行することで Supabase 環境の作成とデータ投入まで行える
+このとき、.env ファイルの作成も同時に行われる
 
-インポート完了後、SQL Editor を開き、次の SQL クエリを実行して関数を作成
+```bash
+# ローカル環境に Supabase の環境を構築
+bash ./tools/supabase.sh
 
-```sql
--- 既存設定の削除
-DROP FUNCTION IF EXISTS execute_sql_query(text);
-DROP POLICY IF EXISTS "Enable read access for everyone" ON govis_table_01;
-DROP POLICY IF EXISTS "Enable read access for everyone" ON govis_table_02;
-DROP POLICY IF EXISTS "Enable read access for everyone" ON govis_table_03;
-DROP POLICY IF EXISTS "Enable read access for everyone" ON govis_table_04;
-
--- クエリ自由実行関数
-CREATE OR REPLACE FUNCTION execute_sql_query(query_text text)
-RETURNS json
-LANGUAGE plpgsql
-SECURITY DEFINER
-AS $$
-DECLARE
-result json;
-clean_query text;
-BEGIN
--- セキュリティ: SELECT文のみ許可
-IF NOT (UPPER(TRIM(query_text)) LIKE 'SELECT%') THEN
-    RAISE EXCEPTION 'Only SELECT statements are allowed';
-END IF;
-
--- セミコロンを除去してクリーンなクエリにする
-clean_query := TRIM(TRAILING ';' FROM TRIM(query_text));
-
--- 動的SQLを実行
-EXECUTE format('SELECT json_agg(row_to_json(t)) FROM (%s) t', clean_query) INTO result;
-
--- 結果がNULLの場合は空配列を返す
-IF result IS NULL THEN
-    result := '[]'::json;
-END IF;
-
-RETURN result;
-EXCEPTION
-WHEN OTHERS THEN
-    -- エラーが発生した場合はエラー情報を返す
-    RETURN json_build_object('error', SQLERRM, 'sqlstate', SQLSTATE);
-END;
-$$;
-GRANT EXECUTE ON FUNCTION execute_sql_query(text) TO public;
-
--- テーブルアクセス設定
-CREATE POLICY "Enable read access for all" ON govis_table_01 FOR SELECT TO public USING (true);
-CREATE POLICY "Enable read access for all" ON govis_table_02 FOR SELECT TO public USING (true);
-CREATE POLICY "Enable read access for all" ON govis_table_03 FOR SELECT TO public USING (true);
-CREATE POLICY "Enable read access for all" ON govis_table_04 FOR SELECT TO public USING (true);
+# tools/input/ に配置した Zip ファイルからデータを生成し登録
+python tools/build_database.py
 ```
+
+#### 既存の Supabase を使用する場合
+
+.env.example を コピーして .env を作成
+
+```bash
+cp ./.env.example ./.env
+```
+
+`NEXT_PUBLIC_SUPABASE_URL` と `NEXT_PUBLIC_SUPABASE_ANON_KEY` を設定
+
+スクリプトを実行し、データを登録
+```
+python tools/build_database.py
+```
+
+### 環境変数の設定
+
+.env ファイルの値を設定する
+
+- `NEXT_PUBLIC_URL`: サイトトップページとなるアドレス（ローカルの場合、ポートだけ確認すればよい）
+- `NEXT_PUBLIC_SUPABASE_URL`: Supabase のプロジェクト URL
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY`: Supabase の anon_key
+- `GOOGLE_API_KEY`: Gemini が使用可能な Goole API Key
+- `GEMINI_MODEL`: 使用する Gemini モデル指定文字列（基本的に変更不要）
+
+
+## プログラムの起動
+
+[開発環境構築](#開発環境構築) が完了したら、開発環境として起動してください
+
+```bash
+npm run dev
+```
+
+起動後、http://localhost:3000 に接続してトップページが表示されることを確認してください
+
+うまくいかない場合、次の点を確認してください
+- 別のポートで起動されていないか（起動時のコンソールログを確認）
+- Supabase 環境が稼働しているか（`npx supabase status`）
+- データベースは作成されているか
+- データベースにデータが投入されているか

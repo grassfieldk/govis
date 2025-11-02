@@ -1,0 +1,206 @@
+erDiagram
+    projects_master ||--o{ policies : "has"
+    projects_master ||--o{ laws : "has"
+    projects_master ||--o{ subsidies : "has"
+    projects_master ||--o{ related_projects : "has"
+    projects_master ||--o{ budgets : "has"
+    projects_master ||--o{ budget_items : "has"
+    projects_master ||--o{ expenditures : "has"
+    projects_master ||--o{ expenditure_flows : "has"
+    projects_master ||--o{ expenditure_usages : "has"
+    projects_master ||--o{ expenditure_contracts : "has"
+
+    projects_master {
+        bigint project_year PK
+        text project_id PK
+        text project_name
+        text ministry
+        text bureau
+        text department
+        text division
+        text section
+        text unit
+        text project_group
+        text creator
+        text purpose
+        text current_issues
+        text overview
+        text overview_url
+        text project_category
+        text start_year
+        text start_year_unknown
+        text end_year
+        text end_year_indefinite
+        text major_expense
+        text remarks
+        text impl_direct
+        text impl_subsidy
+        text impl_burden
+        text impl_grant
+        text impl_contribution
+        text impl_other
+        text old_project_number
+    }
+
+    policies {
+        bigint project_year PK,FK
+        text project_id PK,FK
+        bigint seq_no PK
+        text policy_ministry
+        text policy_name
+        text measure_name
+        text policy_url
+    }
+
+    laws {
+        bigint project_year PK,FK
+        text project_id PK,FK
+        bigint seq_no PK
+        text law_name
+        text law_number
+        text law_id
+        text article
+        text law_paragraph
+        text law_item_subdivision
+    }
+
+    subsidies {
+        bigint project_year PK,FK
+        text project_id PK,FK
+        bigint seq_no PK
+        text subsidy_target
+        text subsidy_rate
+        text subsidy_cap
+        text subsidy_url
+    }
+
+    related_projects {
+        bigint project_year PK,FK
+        text project_id PK,FK
+        bigint seq_no PK
+        text related_project_id
+        text related_project_name
+        text relation_type
+    }
+
+    budgets {
+        bigint project_year PK,FK
+        text project_id PK,FK
+        bigint budget_year PK
+        bigint seq_no PK
+        text account_category
+        text account
+        text sub_account
+        text initial_budget
+        text supplementary_budget_1
+        text supplementary_budget_2
+        text supplementary_budget_3
+        text supplementary_budget_4
+        text supplementary_budget_5
+        text carryover_from_prev
+        text reserve_fund_1
+        text reserve_fund_2
+        text reserve_fund_3
+        text reserve_fund_4
+        text current_budget
+        text execution_amount
+        text execution_rate
+        text carryover_to_next
+        text next_year_request
+        text requested_amount
+        text increase_reason
+        text special_notes
+        text remarks
+    }
+
+    budget_items {
+        bigint project_year PK,FK
+        text project_id PK,FK
+        bigint budget_year PK
+        bigint seq_no PK
+        text account_category
+        text account
+        text sub_account
+        text budget_type
+        text jurisdiction
+        text organization
+        text budget_item
+        text category
+        text supplement_info
+        text budget_amount
+        text next_year_request
+        text remarks
+    }
+
+    expenditures {
+        bigint project_year PK,FK
+        text project_id PK,FK
+        bigint seq_no PK
+        text block_number
+        text block_name
+        text num_recipients
+        text role
+        text block_total_amount
+        text recipient_name
+        text corporate_number
+        text location
+        text corporate_type
+        text other_recipient
+        text recipient_total_amount
+        text contract_summary
+        text amount
+        text contract_method
+        text specific_contract_method
+        text num_bidders
+        text bid_rate
+        text sole_bid_reason
+        text other_contract
+    }
+
+    expenditure_flows {
+        bigint project_year PK,FK
+        text project_id PK,FK
+        bigint seq_no PK
+        text source_block
+        text source_block_name
+        text from_organization
+        text destination_block
+        text destination_block_name
+        text flow_supplement
+        text indirect_cost
+        text indirect_cost_item
+        text indirect_cost_amount
+    }
+
+    expenditure_usages {
+        bigint project_year PK,FK
+        text project_id PK,FK
+        bigint seq_no PK
+        text block_number
+        text recipient_name
+        text corporate_number
+        text contract_summary
+        text expense_item
+        text usage
+        text amount
+    }
+
+    expenditure_contracts {
+        bigint project_year PK,FK
+        text project_id PK,FK
+        bigint seq_no PK
+        text block_number
+        text contractor_name
+        text contractor_corporate_number
+        text contractor_location
+        text contractor_type
+        text contract_summary
+        text other_contract
+        text contract_amount
+        text contract_method
+        text specific_contract_method
+        text num_bidders
+        text bid_rate
+        text sole_bid_reason
+        text other_contract_detail
+    }
