@@ -64,8 +64,8 @@ async function main() {
   if (!psqlAvailable) {
     console.warn(
       `[WARNING] psql command is not available.\n` +
-      `- Import will be slower for large CSV files.\n` +
-      `- You will also need to manually execute SQL files for function and policy setup after import.`
+        `- Import will be slower for large CSV files.\n` +
+        `- You will also need to manually execute SQL files for function and policy setup after import.`,
     );
   }
 
@@ -173,7 +173,9 @@ async function main() {
     console.log(`\nApplying function and policy setup from: ${setupSqlPath}`);
     execSync(`psql "${dbUrl}" -f "${setupSqlPath}"`, { stdio: "inherit" });
   } else {
-    console.warn("[WARNING] psql is not available. Please apply setup-functions.sql manually.");
+    console.warn(
+      "[WARNING] psql is not available. Please apply setup-functions.sql manually.",
+    );
   }
   await client.end();
 }
