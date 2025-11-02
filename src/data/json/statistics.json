@@ -1,0 +1,79 @@
+{
+  "2014": {
+    "totalBudget": 17845826223717104,
+    "totalExecution": 23137905462238544,
+    "averageExecutionRate": 0.9997311596677584,
+    "eventCount": 4050,
+    "ministryCount": 21
+  },
+  "2015": {
+    "totalBudget": 346925549366400,
+    "totalExecution": 353993481056127,
+    "averageExecutionRate": 0.9971871448957306,
+    "eventCount": 4474,
+    "ministryCount": 20
+  },
+  "2016": {
+    "totalBudget": 104262010713260,
+    "totalExecution": 109670796343445,
+    "averageExecutionRate": 0.9987020041740473,
+    "eventCount": 4341,
+    "ministryCount": 20
+  },
+  "2017": {
+    "totalBudget": 105161106063000,
+    "totalExecution": 111212510353886,
+    "averageExecutionRate": 0.9999068627421838,
+    "eventCount": 4318,
+    "ministryCount": 20
+  },
+  "2018": {
+    "totalBudget": 106565926362000,
+    "totalExecution": 111757204437996,
+    "averageExecutionRate": 0.9999698774760439,
+    "eventCount": 4319,
+    "ministryCount": 20
+  },
+  "2019": {
+    "totalBudget": 110865303087000,
+    "totalExecution": 116652701966661,
+    "averageExecutionRate": 0.9999710921107896,
+    "eventCount": 4391,
+    "ministryCount": 20
+  },
+  "2020": {
+    "totalBudget": 114004824624000,
+    "totalExecution": 160506562258740,
+    "averageExecutionRate": 0.9999294121691908,
+    "eventCount": 4589,
+    "ministryCount": 20
+  },
+  "2021": {
+    "totalBudget": 112700559819000,
+    "totalExecution": 147752713273165,
+    "averageExecutionRate": 0.9994596461984682,
+    "eventCount": 4561,
+    "ministryCount": 21
+  },
+  "2022": {
+    "totalBudget": 113254942909000,
+    "totalExecution": 140516419405881,
+    "averageExecutionRate": 0.9999325030097019,
+    "eventCount": 4482,
+    "ministryCount": 22
+  },
+  "2023": {
+    "totalBudget": 117664950781000,
+    "totalExecution": 148988370828453,
+    "averageExecutionRate": 0.9983723272002256,
+    "eventCount": 4670,
+    "ministryCount": 24
+  },
+  "2024": {
+    "totalBudget": 121141049606724,
+    "totalExecution": 129518856972958,
+    "averageExecutionRate": 0.8009926490363043,
+    "eventCount": 5664,
+    "ministryCount": 37
+  }
+}
