@@ -19,7 +19,7 @@ pip install -r requirements.txt
 
 ### build_database.py
 
-CSV ファイルを SQLite データベースに変換します。
+CSV ファイルを SQLite データベースに変換します
 
 **実行方法**
 
@@ -44,4 +44,4 @@ python3 ./tools/build_database.py
   - `project_subsidy` - 補助率情報
   - `project_related` - 関連事業
 
-詳細は `work/normalization-policy.md` を参照してください。
+詳細は `work/normalization-policy.md` を参照してください
