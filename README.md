@@ -59,8 +59,8 @@ DB サーバの立ち上げやユーザー管理などを考えずに Web API �
 
 ### 1. CSV データのダウンロード
 
-https://rssystem.go.jp/download-csv/2024 から CSV データをダウンロード
-対象: "5-" で始まる支出先情報の CSV ファイルすべて
+https://rssystem.go.jp/download-csv/2024 からすべての CSV データファイルをダウンロードする
+Zip ファイルになっているため解凍して CSV ファイルを取り出す
 
 ### 2-A. Supabase 環境の作成（ローカル）
 
