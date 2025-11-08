@@ -24,12 +24,14 @@ NORMALIZE_COLUMNS = {
 
 def build_budget_summary_table(df: pd.DataFrame) -> pd.DataFrame:
     """
-    budget_summary テーブルを構築
+    budgets テーブルを構築（正規化済み）
 
     データソース: 2-1
     特徴: 1事業・1予算年度につき複数行（会計区分ごと + 合計行）
+
+    project_name は削除し、projects_master との JOIN で取得する設計。
     """
-    logger.info("budget_summary テーブル構築中...")
+    logger.info("budgets テーブル構築中...")
 
     # seq_no を採番（同一事業・予算年度内での連番）
     df = df.copy()
@@ -44,8 +46,7 @@ def build_budget_summary_table(df: pd.DataFrame) -> pd.DataFrame:
     result["budget_year"] = pd.to_numeric(df["予算年度"], errors='coerce').astype('Int64')
     result["seq_no"] = df["seq_no"].astype('Int64')
 
-    # 基本情報
-    result["project_name"] = df["事業名"]
+    # 基本情報（project_name 削除）
     result["account_category"] = df["会計区分"]
     result["account"] = df["会計"]
     result["sub_account"] = df["勘定"]
@@ -78,19 +79,21 @@ def build_budget_summary_table(df: pd.DataFrame) -> pd.DataFrame:
     result["special_notes"] = df["その他特記事項"]
     result["remarks"] = df["備考"]
 
-    logger.info(f"  budget_summary テーブル完成: {len(result):,} 行, {len(result.columns)} カラム")
+    logger.info(f"  budgets テーブル完成: {len(result):,} 行, {len(result.columns)} カラム")
 
     return result
 
 
 def build_budget_detail_table(df: pd.DataFrame) -> pd.DataFrame:
     """
-    budget_detail テーブルを構築
+    budget_items テーブルを構築（正規化済み）
 
     データソース: 2-2
     特徴: 1事業・1予算年度につき、歳出予算項目（目）ごとに1行
+
+    project_name は削除し、projects_master との JOIN で取得する設計。
     """
-    logger.info("budget_detail テーブル構築中...")
+    logger.info("budget_items テーブル構築中...")
 
     # seq_no を採番（同一事業・予算年度内での連番）
     df = df.copy()
@@ -105,8 +108,7 @@ def build_budget_detail_table(df: pd.DataFrame) -> pd.DataFrame:
     result["budget_year"] = pd.to_numeric(df["予算年度"], errors='coerce').astype('Int64')
     result["seq_no"] = df["seq_no"].astype('Int64')
 
-    # 基本情報
-    result["project_name"] = df["事業名"]
+    # 基本情報（project_name 削除）
     result["account_category"] = df["会計区分"]
     result["account"] = df["会計"]
     result["sub_account"] = df["勘定"]
@@ -126,23 +128,27 @@ def build_budget_detail_table(df: pd.DataFrame) -> pd.DataFrame:
     # 備考
     result["remarks"] = df["備考（歳出予算項目ごと）"]
 
-    logger.info(f"  budget_detail テーブル完成: {len(result):,} 行, {len(result.columns)} カラム")
+    logger.info(f"  budget_items テーブル完成: {len(result):,} 行, {len(result.columns)} カラム")
 
     return result
 
 
 def build_budget_execution_tables(input_dir: Path) -> dict[str, pd.DataFrame]:
     """
-    予算・執行セクション（2-*.csv）から2つのテーブルを構築
+    予算・執行セクション（2-*.csv）から2つのテーブルを構築（正規化済み）
 
     Args:
         input_dir: CSVファイルが格納されているディレクトリ
 
     Returns:
         テーブル名をキー、DataFrameを値とする辞書
+
+    正規化構造:
+        - budgets: 予算・執行のサマリ（project_name なし、外部キー参照）
+        - budget_items: 歳出予算項目の詳細（project_name なし、外部キー参照）
     """
     logger.info("=" * 60)
-    logger.info("予算・執行セクション")
+    logger.info("予算・執行セクション（正規化済み構造）")
     logger.info("=" * 60)
 
     # CSV読み込み
@@ -159,8 +165,8 @@ def build_budget_execution_tables(input_dir: Path) -> dict[str, pd.DataFrame]:
     logger.info("=" * 60)
 
     tables = {
-        "budget_summary": build_budget_summary_table(df_summary),
-        "budget_detail": build_budget_detail_table(df_detail)
+        "budgets": build_budget_summary_table(df_summary),
+        "budget_items": build_budget_detail_table(df_detail)
     }
 
     # 検証
@@ -168,7 +174,7 @@ def build_budget_execution_tables(input_dir: Path) -> dict[str, pd.DataFrame]:
     logger.info("検証")
     logger.info("=" * 60)
 
-    validate_table(tables["budget_summary"], "budget_summary", ["project_year", "project_id", "budget_year", "seq_no"])
-    validate_table(tables["budget_detail"], "budget_detail", ["project_year", "project_id", "budget_year", "seq_no"])
+    validate_table(tables["budgets"], "budgets", ["project_year", "project_id", "budget_year", "seq_no"])
+    validate_table(tables["budget_items"], "budget_items", ["project_year", "project_id", "budget_year", "seq_no"])
 
     return tables

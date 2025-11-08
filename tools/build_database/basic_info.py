@@ -23,13 +23,16 @@ NORMALIZE_COLUMNS = {
 }
 
 
-def build_project_table(df_org: pd.DataFrame, df_overview: pd.DataFrame) -> pd.DataFrame:
+def build_projects_master_table(df_org: pd.DataFrame, df_overview: pd.DataFrame) -> pd.DataFrame:
     """
-    project テーブルを構築
+    projects_master テーブルを構築（正規化済みマスタテーブル）
 
     データソース: 1-1 + 1-2 (INNER JOIN)
+
+    このテーブルは事業の基本情報を一元管理するマスタテーブル。
+    他のすべての詳細テーブルはこのテーブルを外部キー参照する。
     """
-    logger.info("project テーブル構築中...")
+    logger.info("projects_master テーブル構築中...")
 
     # 1-1, 1-2 両方に同一事業が複数行ある場合があるため、最初の行のみを使用
     df_org_unique = df_org.drop_duplicates(subset=["事業年度", "予算事業ID"], keep="first")
@@ -92,18 +95,20 @@ def build_project_table(df_org: pd.DataFrame, df_overview: pd.DataFrame) -> pd.D
 
     result["old_project_number"] = df["旧事業番号"]
 
-    logger.info(f"  project テーブル完成: {len(result):,} 行, {len(result.columns)} カラム")
+    logger.info(f"  projects_master テーブル完成: {len(result):,} 行, {len(result.columns)} カラム")
 
     return result
 
 
-def build_project_policy_table(df: pd.DataFrame) -> pd.DataFrame:
+def build_policies_table(df: pd.DataFrame) -> pd.DataFrame:
     """
-    project_policy テーブルを構築
+    policies テーブルを構築（正規化済み詳細テーブル）
 
     データソース: 1-3（政策カラムが空でない行）
+
+    project_name は削除し、projects_master との JOIN で取得する設計。
     """
-    logger.info("project_policy テーブル構築中...")
+    logger.info("policies テーブル構築中...")
 
     # 政策カラムが空でない行を抽出
     df_filtered = df[df["政策"].notna()].copy()
@@ -121,18 +126,20 @@ def build_project_policy_table(df: pd.DataFrame) -> pd.DataFrame:
     result["measure_name"] = df_filtered["施策"]
     result["policy_url"] = df_filtered["政策・施策URL"]
 
-    logger.info(f"  project_policy テーブル完成: {len(result):,} 行")
+    logger.info(f"  policies テーブル完成: {len(result):,} 行")
 
     return result
 
 
-def build_project_law_table(df: pd.DataFrame) -> pd.DataFrame:
+def build_laws_table(df: pd.DataFrame) -> pd.DataFrame:
     """
-    project_law テーブルを構築
+    laws テーブルを構築（正規化済み詳細テーブル）
 
     データソース: 1-3（法令カラムが空でない行）
+
+    project_name は削除し、projects_master との JOIN で取得する設計。
     """
-    logger.info("project_law テーブル構築中...")
+    logger.info("laws テーブル構築中...")
 
     # 法令カラムが空でない行を抽出
     df_filtered = df[df["法令名"].notna()].copy()
@@ -152,18 +159,20 @@ def build_project_law_table(df: pd.DataFrame) -> pd.DataFrame:
     result["paragraph"] = df_filtered["項"]
     result["item"] = df_filtered["号・号の細分"]
 
-    logger.info(f"  project_law テーブル完成: {len(result):,} 行")
+    logger.info(f"  laws テーブル完成: {len(result):,} 行")
 
     return result
 
 
-def build_project_subsidy_table(df: pd.DataFrame) -> pd.DataFrame:
+def build_subsidies_table(df: pd.DataFrame) -> pd.DataFrame:
     """
-    project_subsidy テーブルを構築
+    subsidies テーブルを構築（正規化済み詳細テーブル）
 
     データソース: 1-4
+
+    project_name は削除し、projects_master との JOIN で取得する設計。
     """
-    logger.info("project_subsidy テーブル構築中...")
+    logger.info("subsidies テーブル構築中...")
 
     # 番号カラムをそのまま seq_no として使用（空行は除外）
     df_filtered = df[df["番号（補助率等）"].notna()].copy()
@@ -178,18 +187,20 @@ def build_project_subsidy_table(df: pd.DataFrame) -> pd.DataFrame:
     result["subsidy_cap"] = df_filtered["補助上限等"]
     result["subsidy_url"] = df_filtered["補助率URL"]
 
-    logger.info(f"  project_subsidy テーブル完成: {len(result):,} 行")
+    logger.info(f"  subsidies テーブル完成: {len(result):,} 行")
 
     return result
 
 
-def build_project_related_table(df: pd.DataFrame) -> pd.DataFrame:
+def build_related_projects_table(df: pd.DataFrame) -> pd.DataFrame:
     """
-    project_related テーブルを構築
+    related_projects テーブルを構築（正規化済み詳細テーブル）
 
     データソース: 1-5
+
+    project_name は削除し、projects_master との JOIN で取得する設計。
     """
-    logger.info("project_related テーブル構築中...")
+    logger.info("related_projects テーブル構築中...")
 
     # 関連事業IDが空でない行を抽出
     df_filtered = df[df["関連事業の事業ID"].notna()].copy()
@@ -203,23 +214,30 @@ def build_project_related_table(df: pd.DataFrame) -> pd.DataFrame:
     result["related_project_name"] = df_filtered["関連事業の事業名"]
     result["relation_type"] = df_filtered["関連性"]
 
-    logger.info(f"  project_related テーブル完成: {len(result):,} 行")
+    logger.info(f"  related_projects テーブル完成: {len(result):,} 行")
 
     return result
 
 
 def build_basic_info_tables(input_dir: Path) -> dict[str, pd.DataFrame]:
     """
-    基本情報セクション（1-*.csv）から5つのテーブルを構築
+    基本情報セクション（1-*.csv）から5つのテーブルを構築（正規化済み）
 
     Args:
         input_dir: CSVファイルが格納されているディレクトリ
 
     Returns:
         テーブル名をキー、DataFrameを値とする辞書
+
+    正規化構造:
+        - projects_master: 事業の基本情報マスタ（project_name を含む唯一のテーブル）
+        - policies: 政策・施策の詳細（project_name なし、外部キー参照）
+        - laws: 法令の詳細（project_name なし、外部キー参照）
+        - subsidies: 補助率の詳細（project_name なし、外部キー参照）
+        - related_projects: 関連事業の詳細（project_name なし、外部キー参照）
     """
     logger.info("=" * 60)
-    logger.info("基本情報セクション")
+    logger.info("基本情報セクション（正規化済み構造）")
     logger.info("=" * 60)
 
     # CSV読み込み
@@ -242,11 +260,11 @@ def build_basic_info_tables(input_dir: Path) -> dict[str, pd.DataFrame]:
     logger.info("=" * 60)
 
     tables = {
-        "project": build_project_table(df_org, df_overview),
-        "project_policy": build_project_policy_table(df_policy_law),
-        "project_law": build_project_law_table(df_policy_law),
-        "project_subsidy": build_project_subsidy_table(df_subsidy),
-        "project_related": build_project_related_table(df_related)
+        "projects_master": build_projects_master_table(df_org, df_overview),
+        "policies": build_policies_table(df_policy_law),
+        "laws": build_laws_table(df_policy_law),
+        "subsidies": build_subsidies_table(df_subsidy),
+        "related_projects": build_related_projects_table(df_related)
     }
 
     # 検証
@@ -254,10 +272,10 @@ def build_basic_info_tables(input_dir: Path) -> dict[str, pd.DataFrame]:
     logger.info("検証")
     logger.info("=" * 60)
 
-    validate_table(tables["project"], "project", ["project_year", "project_id"])
-    validate_table(tables["project_policy"], "project_policy", ["project_year", "project_id", "seq_no"])
-    validate_table(tables["project_law"], "project_law", ["project_year", "project_id", "seq_no"])
-    validate_table(tables["project_subsidy"], "project_subsidy", ["project_year", "project_id", "seq_no"])
-    validate_table(tables["project_related"], "project_related", ["project_year", "project_id", "seq_no"])
+    validate_table(tables["projects_master"], "projects_master", ["project_year", "project_id"])
+    validate_table(tables["policies"], "policies", ["project_year", "project_id", "seq_no"])
+    validate_table(tables["laws"], "laws", ["project_year", "project_id", "seq_no"])
+    validate_table(tables["subsidies"], "subsidies", ["project_year", "project_id", "seq_no"])
+    validate_table(tables["related_projects"], "related_projects", ["project_year", "project_id", "seq_no"])
 
     return tables

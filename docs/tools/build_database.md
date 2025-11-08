@@ -4,6 +4,58 @@
 https://rssystem.go.jp/download-csv から入手したデータを加工しデータベース化する
 元データには表記ゆれやカラム重複があるため、スクリプトで正規化を行う
 
+### テーブル・ビュー一覧
+
+| 種別     | 名前                                 | 説明                                                      |
+| -------- | ------------------------------------ | --------------------------------------------------------- |
+| テーブル | `projects_master`                    | 事業の基本情報マスタ（project_name を含む唯一のテーブル） |
+| テーブル | `policies`                           | 政策・施策の詳細                                          |
+| テーブル | `laws`                               | 法令の詳細                                                |
+| テーブル | `subsidies`                          | 補助率の詳細                                              |
+| テーブル | `related_projects`                   | 関連事業の詳細                                            |
+| テーブル | `budgets`                            | 予算・執行のサマリ                                        |
+| テーブル | `budget_items`                       | 歳出予算項目の詳細                                        |
+| テーブル | `expenditures`                       | 支出先情報                                                |
+| テーブル | `expenditure_flows`                  | 支出先ブロックの資金の流れ                                |
+| テーブル | `expenditure_usages`                 | 費目・使途の詳細                                          |
+| テーブル | `expenditure_contracts`              | 国庫債務負担行為等の契約情報                              |
+| ビュー   | `policies_with_project`              | 政策情報 + 事業名                                         |
+| ビュー   | `laws_with_project`                  | 法令情報 + 事業名                                         |
+| ビュー   | `subsidies_with_project`             | 補助率情報 + 事業名                                       |
+| ビュー   | `related_projects_with_project`      | 関連事業情報 + 事業名                                     |
+| ビュー   | `budgets_with_project`               | 予算サマリ + 事業名                                       |
+| ビュー   | `budget_items_with_project`          | 予算項目 + 事業名                                         |
+| ビュー   | `expenditures_with_project`          | 支出先情報 + 事業名                                       |
+| ビュー   | `expenditure_flows_with_project`     | 支出ブロックの流れ + 事業名                               |
+| ビュー   | `expenditure_usages_with_project`    | 費目・使途 + 事業名                                       |
+| ビュー   | `expenditure_contracts_with_project` | 契約情報 + 事業名                                         |
+| ビュー   | `projects_summary`                   | 事業ごとの関連情報サマリ                                  |
+
+### クエリ例
+
+```sql
+-- VIEW を使った簡単なクエリ
+SELECT * FROM expenditures_with_project
+WHERE ministry = '内閣府'
+ORDER BY amount DESC LIMIT 10;
+
+-- 事業サマリを取得
+SELECT * FROM projects_summary
+WHERE policy_count > 0 OR expenditure_count > 0
+ORDER BY expenditure_count DESC;
+
+-- テーブルを直接 JOIN する場合
+SELECT
+    pm.project_name,
+    e.recipient_name,
+    e.amount
+FROM expenditures e
+JOIN projects_master pm USING (project_year, project_id)
+WHERE e.amount IS NOT NULL
+ORDER BY CAST(e.amount AS INTEGER) DESC
+LIMIT 10;
+```
+
 
 ## 共通の正規化方針
 
@@ -44,15 +96,18 @@ https://rssystem.go.jp/download-csv から入手したデータを加工しデ�
 
 - **基本情報セクション**: [build_database/basic_info.md](./build_database/basic_info.md)
   - 対象: `input/1-*.csv`（5ファイル）
-  - 出力: 5テーブル（`project`, `project_policy`, `project_law`, `project_subsidy`, `project_related`）
+  - 出力: 5テーブル（`projects_master`, `policies`, `laws`, `subsidies`, `related_projects`）
+  - **注**: `projects_master` がマスタテーブルとなり、他のテーブルはこれを参照
 
 - **予算・執行セクション**: [build_database/budget_execution.md](./build_database/budget_execution.md)
   - 対象: `input/2-*.csv`（2ファイル）
-  - 出力: 2テーブル（`budget_summary`, `budget_detail`）
+  - 出力: 2テーブル（`budgets`, `budget_items`）
+  - **注**: `project_name` は削除済み、`projects_master` との JOIN で取得
 
 - **支出先セクション**: [build_database/expenditure.md](./build_database/expenditure.md)
   - 対象: `input/5-*.csv`（4ファイル）
-  - 出力: 4テーブル（`expenditure_info`, `expenditure_flow`, `expenditure_usage`, `expenditure_contract`）
+  - 出力: 4テーブル（`expenditures`, `expenditure_flows`, `expenditure_usages`, `expenditure_contracts`）
+  - **注**: `project_name` は削除済み、`projects_master` との JOIN で取得
 
 
 ## 設計
@@ -67,7 +122,8 @@ tools/
 │   ├─ common.py            # 共通関数（sanitize, normalize, load_csv）
 │   ├─ basic_info.py        # 基本情報セクション（1-*.csv → 5テーブル）
 │   ├─ budget_execution.py  # 予算・執行セクション（2-*.csv → 2テーブル）
-│   └─ expenditure.py       # 支出先セクション（5-*.csv → 4テーブル）
+│   ├─ expenditure.py       # 支出先セクション（5-*.csv → 4テーブル）
+│   └─ create_views.sql     # VIEW 定義（JOIN を隠蔽）
 ├─ requirements.txt          # pandas, neologdn
 └─ .venv/                    # 仮想環境
 ```
@@ -100,50 +156,50 @@ docs/tools/build_database/
 
 `input/1-*.csv` から5つのテーブルを構築する
 
-**構築するテーブル:**
-- `project`: 事業基本情報（1-1 と 1-2 を結合）
-- `project_policy`: 政策・施策との紐付け（1-3 から抽出）
-- `project_law`: 法令との紐付け（1-3 から抽出）
-- `project_subsidy`: 補助率情報（1-4）
-- `project_related`: 関連事業（1-5）
+**構築するテーブル（正規化済み）:**
+- `projects_master`: 事業基本情報マスタ（1-1 と 1-2 を結合）- **project_name を含む唯一のテーブル**
+- `policies`: 政策・施策との紐付け（1-3 から抽出）- project_name なし
+- `laws`: 法令との紐付け（1-3 から抽出）- project_name なし
+- `subsidies`: 補助率情報（1-4）- project_name なし
+- `related_projects`: 関連事業（1-5）- project_name なし
 
 **主要な関数:**
 - `build_basic_info_tables()`: エントリーポイント
-- `build_project_table()`: project テーブルの構築
-- `build_project_policy_table()`: project_policy テーブルの構築
-- `build_project_law_table()`: project_law テーブルの構築
-- `build_project_subsidy_table()`: project_subsidy テーブルの構築
-- `build_project_related_table()`: project_related テーブルの構築
+- `build_projects_master_table()`: projects_master テーブルの構築
+- `build_policies_table()`: policies テーブルの構築
+- `build_laws_table()`: laws テーブルの構築
+- `build_subsidies_table()`: subsidies テーブルの構築
+- `build_related_projects_table()`: related_projects テーブルの構築
 
 #### 予算・執行セクション（`budget_execution.py`）
 
 `input/2-*.csv` から2つのテーブルを構築する
 
-**構築するテーブル:**
-- `budget_summary`: 予算・執行サマリ（2-1）
-- `budget_detail`: 歳出予算項目の詳細（2-2）
+**構築するテーブル（正規化済み）:**
+- `budgets`: 予算・執行サマリ（2-1）- project_name なし
+- `budget_items`: 歳出予算項目の詳細（2-2）- project_name なし
 
 **主要な関数:**
 - `build_budget_execution_tables()`: エントリーポイント
-- `build_budget_summary_table()`: budget_summary テーブルの構築
-- `build_budget_detail_table()`: budget_detail テーブルの構築
+- `build_budget_summary_table()`: budgets テーブルの構築
+- `build_budget_detail_table()`: budget_items テーブルの構築
 
 #### 支出先セクション（`expenditure.py`）
 
 `input/5-*.csv` から4つのテーブルを構築する
 
-**構築するテーブル:**
-- `expenditure_info`: 支出先情報（5-1）
-- `expenditure_flow`: 支出先ブロックのつながり（5-2）
-- `expenditure_usage`: 費目・使途（5-3）
-- `expenditure_contract`: 国庫債務負担行為等による契約（5-4）
+**構築するテーブル（正規化済み）:**
+- `expenditures`: 支出先情報（5-1）- project_name なし
+- `expenditure_flows`: 支出先ブロックのつながり（5-2）- project_name なし
+- `expenditure_usages`: 費目・使途（5-3）- project_name なし
+- `expenditure_contracts`: 国庫債務負担行為等による契約（5-4）- project_name なし
 
 **主要な関数:**
 - `build_expenditure_tables()`: エントリーポイント
-- `build_expenditure_info_table()`: expenditure_info テーブルの構築
-- `build_expenditure_flow_table()`: expenditure_flow テーブルの構築
-- `build_expenditure_usage_table()`: expenditure_usage テーブルの構築
-- `build_expenditure_contract_table()`: expenditure_contract テーブルの構築
+- `build_expenditure_info_table()`: expenditures テーブルの構築
+- `build_expenditure_flow_table()`: expenditure_flows テーブルの構築
+- `build_expenditure_usage_table()`: expenditure_usages テーブルの構築
+- `build_expenditure_contract_table()`: expenditure_contracts テーブルの構築
 
 #### 共通関数（`common.py`）
 
@@ -169,6 +225,125 @@ pip install -r tools/requirements.txt
 
 # データベース生成
 tools/.venv/bin/python3 tools/build_database.py
+
+# ビューの適用
+sqlite3 output/rs_data.sqlite < tools/build_database/create_views.sql
 ```
 
-**出力:** `output/rs_data.sqlite`
+**出力:**
+- `output/rs_data.sqlite` - 正規化済みデータベース（73MB、11テーブル、377,020行）
+- 11個の便利な VIEW が追加されます
+
+## ER図
+
+```mermaid
+erDiagram
+    %% 事業マスタ
+    PROJECTS_MASTER {
+        int project_year PK
+        text project_id PK
+        text project_name
+        text ministry
+        text bureau
+        text department
+        text division
+    }
+
+    %% 基本情報の詳細テーブル
+    POLICIES {
+        int project_year PK,FK
+        text project_id PK,FK
+        int seq_no PK
+        text policy_name
+        text measure_name
+    }
+
+    LAWS {
+        int project_year PK,FK
+        text project_id PK,FK
+        int seq_no PK
+        text law_name
+        text law_number
+    }
+
+    SUBSIDIES {
+        int project_year PK,FK
+        text project_id PK,FK
+        int seq_no PK
+        text subsidy_target
+        text subsidy_rate
+    }
+
+    RELATED_PROJECTS {
+        int project_year PK,FK
+        text project_id PK,FK
+        int seq_no PK
+        text related_project_id
+        text related_project_name
+    }
+
+    %% 予算・執行の詳細テーブル
+    BUDGETS {
+        int project_year PK,FK
+        text project_id PK,FK
+        int budget_year PK
+        int seq_no PK
+        text account_category
+        text initial_budget
+        text execution_amount
+    }
+
+    BUDGET_ITEMS {
+        int project_year PK,FK
+        text project_id PK,FK
+        int budget_year PK
+        int seq_no PK
+        text budget_type
+        text budget_amount
+    }
+
+    %% 支出先の詳細テーブル
+    EXPENDITURES {
+        int project_year PK,FK
+        text project_id PK,FK
+        int seq_no PK
+        text recipient_name
+        text amount
+    }
+
+    EXPENDITURE_FLOWS {
+        int project_year PK,FK
+        text project_id PK,FK
+        int seq_no PK
+        text source_block
+        text destination_block
+    }
+
+    EXPENDITURE_USAGES {
+        int project_year PK,FK
+        text project_id PK,FK
+        int seq_no PK
+        text expense_item
+        text usage
+    }
+
+    EXPENDITURE_CONTRACTS {
+        int project_year PK,FK
+        text project_id PK,FK
+        int seq_no PK
+        text contractor_name
+        text contract_amount
+    }
+
+    %% リレーション
+    PROJECTS_MASTER ||--o{ POLICIES : "has"
+    PROJECTS_MASTER ||--o{ LAWS : "has"
+    PROJECTS_MASTER ||--o{ SUBSIDIES : "has"
+    PROJECTS_MASTER ||--o{ RELATED_PROJECTS : "has"
+    PROJECTS_MASTER ||--o{ BUDGETS : "has"
+    PROJECTS_MASTER ||--o{ BUDGET_ITEMS : "has"
+    PROJECTS_MASTER ||--o{ EXPENDITURES : "has"
+    PROJECTS_MASTER ||--o{ EXPENDITURE_FLOWS : "has"
+    PROJECTS_MASTER ||--o{ EXPENDITURE_USAGES : "has"
+    PROJECTS_MASTER ||--o{ EXPENDITURE_CONTRACTS : "has"
+```

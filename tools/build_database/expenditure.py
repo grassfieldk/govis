@@ -34,12 +34,14 @@ NORMALIZE_COLUMNS = {
 
 def build_expenditure_info_table(df: pd.DataFrame) -> pd.DataFrame:
     """
-    expenditure_info テーブルを構築
+    expenditures テーブルを構築（正規化済み）
 
     データソース: 5-1
     特徴: 1事業につき複数の支出先ブロック、各ブロック内に複数の支出先
+
+    project_name は削除し、projects_master との JOIN で取得する設計。
     """
-    logger.info("expenditure_info テーブル構築中...")
+    logger.info("expenditures テーブル構築中...")
 
     # seq_no を採番
     df = df.copy()
@@ -53,8 +55,7 @@ def build_expenditure_info_table(df: pd.DataFrame) -> pd.DataFrame:
     result["project_id"] = df["予算事業ID"]
     result["seq_no"] = df["seq_no"].astype('Int64')
 
-    # 基本情報
-    result["project_name"] = df["事業名"]
+    # 基本情報（project_name 削除）
     result["block_number"] = df["支出先ブロック番号"]
     result["block_name"] = df["支出先ブロック名"]
     result["num_recipients"] = df["支出先の数"]
@@ -79,19 +80,21 @@ def build_expenditure_info_table(df: pd.DataFrame) -> pd.DataFrame:
     result["sole_bid_reason"] = df["一者応札・一者応募又は競争性のない随意契約となった理由及び改善策（支出額10億円以上）"]
     result["other_contract"] = df["その他の契約"]
 
-    logger.info(f"  expenditure_info テーブル完成: {len(result):,} 行, {len(result.columns)} カラム")
+    logger.info(f"  expenditures テーブル完成: {len(result):,} 行, {len(result.columns)} カラム")
 
     return result
 
 
 def build_expenditure_flow_table(df: pd.DataFrame) -> pd.DataFrame:
     """
-    expenditure_flow テーブルを構築
+    expenditure_flows テーブルを構築（正規化済み）
 
     データソース: 5-2
     特徴: 支出元ブロック → 支出先ブロックの資金の流れ
+
+    project_name は削除し、projects_master との JOIN で取得する設計。
     """
-    logger.info("expenditure_flow テーブル構築中...")
+    logger.info("expenditure_flows テーブル構築中...")
 
     # seq_no を採番
     df = df.copy()
@@ -105,10 +108,7 @@ def build_expenditure_flow_table(df: pd.DataFrame) -> pd.DataFrame:
     result["project_id"] = df["予算事業ID"]
     result["seq_no"] = df["seq_no"].astype('Int64')
 
-    # 基本情報
-    result["project_name"] = df["事業名"]
-
-    # 資金の流れ
+    # 資金の流れ（project_name 削除）
     result["source_block"] = df["支出元の支出先ブロック"]
     result["source_block_name"] = df["支出元の支出先ブロック名"]
     result["from_organization"] = df["担当組織からの支出"]
@@ -121,19 +121,21 @@ def build_expenditure_flow_table(df: pd.DataFrame) -> pd.DataFrame:
     result["indirect_cost_item"] = df["国自らが支出する間接経費の項目"]
     result["indirect_cost_amount"] = df["国自らが支出する間接経費の金額"]
 
-    logger.info(f"  expenditure_flow テーブル完成: {len(result):,} 行, {len(result.columns)} カラム")
+    logger.info(f"  expenditure_flows テーブル完成: {len(result):,} 行, {len(result.columns)} カラム")
 
     return result
 
 
 def build_expenditure_usage_table(df: pd.DataFrame) -> pd.DataFrame:
     """
-    expenditure_usage テーブルを構築
+    expenditure_usages テーブルを構築（正規化済み）
 
     データソース: 5-3
     特徴: 支出先ごとの費目・使途の内訳
+
+    project_name は削除し、projects_master との JOIN で取得する設計。
     """
-    logger.info("expenditure_usage テーブル構築中...")
+    logger.info("expenditure_usages テーブル構築中...")
 
     # seq_no を採番
     df = df.copy()
@@ -147,8 +149,7 @@ def build_expenditure_usage_table(df: pd.DataFrame) -> pd.DataFrame:
     result["project_id"] = df["予算事業ID"]
     result["seq_no"] = df["seq_no"].astype('Int64')
 
-    # 基本情報
-    result["project_name"] = df["事業名"]
+    # 基本情報（project_name 削除）
     result["block_number"] = df["支出先ブロック番号"]
     result["recipient_name"] = df["支出先名"]
     result["corporate_number"] = df["法人番号"]
@@ -159,19 +160,21 @@ def build_expenditure_usage_table(df: pd.DataFrame) -> pd.DataFrame:
     result["usage"] = df["使途"]
     result["amount"] = df["金額"]
 
-    logger.info(f"  expenditure_usage テーブル完成: {len(result):,} 行, {len(result.columns)} カラム")
+    logger.info(f"  expenditure_usages テーブル完成: {len(result):,} 行, {len(result.columns)} カラム")
 
     return result
 
 
 def build_expenditure_contract_table(df: pd.DataFrame) -> pd.DataFrame:
     """
-    expenditure_contract テーブルを構築
+    expenditure_contracts テーブルを構築（正規化済み）
 
     データソース: 5-4
     特徴: 国庫債務負担行為等の複数年度契約情報
+
+    project_name は削除し、projects_master との JOIN で取得する設計。
     """
-    logger.info("expenditure_contract テーブル構築中...")
+    logger.info("expenditure_contracts テーブル構築中...")
 
     # seq_no を採番
     df = df.copy()
@@ -185,8 +188,7 @@ def build_expenditure_contract_table(df: pd.DataFrame) -> pd.DataFrame:
     result["project_id"] = df["予算事業ID"]
     result["seq_no"] = df["seq_no"].astype('Int64')
 
-    # 基本情報
-    result["project_name"] = df["事業名"]
+    # 基本情報（project_name 削除）
     result["block_number"] = df["支出先ブロック（国庫債務負担行為等による契約）"]
 
     # 契約先情報
@@ -206,23 +208,29 @@ def build_expenditure_contract_table(df: pd.DataFrame) -> pd.DataFrame:
     result["sole_bid_reason"] = df["一者応札・一者応募又は競争性のない随意契約となった理由及び改善策（契約額10億円以上）（国庫債務負担行為等による契約）"]
     result["other_contract_detail"] = df["その他の契約（国庫債務負担行為等による契約）"]
 
-    logger.info(f"  expenditure_contract テーブル完成: {len(result):,} 行, {len(result.columns)} カラム")
+    logger.info(f"  expenditure_contracts テーブル完成: {len(result):,} 行, {len(result.columns)} カラム")
 
     return result
 
 
 def build_expenditure_tables(input_dir: Path) -> dict[str, pd.DataFrame]:
     """
-    支出先セクション（5-*.csv）から4つのテーブルを構築
+    支出先セクション（5-*.csv）から4つのテーブルを構築（正規化済み）
 
     Args:
         input_dir: CSVファイルが格納されているディレクトリ
 
     Returns:
         テーブル名をキー、DataFrameを値とする辞書
+
+    正規化構造:
+        - expenditures: 支出先情報（project_name なし、外部キー参照）
+        - expenditure_flows: 支出先ブロックの資金の流れ（project_name なし、外部キー参照）
+        - expenditure_usages: 費目・使途の詳細（project_name なし、外部キー参照）
+        - expenditure_contracts: 国庫債務負担行為等の契約情報（project_name なし、外部キー参照）
     """
     logger.info("=" * 60)
-    logger.info("支出先セクション")
+    logger.info("支出先セクション（正規化済み構造）")
     logger.info("=" * 60)
 
     # CSV読み込み
@@ -243,10 +251,10 @@ def build_expenditure_tables(input_dir: Path) -> dict[str, pd.DataFrame]:
     logger.info("=" * 60)
 
     tables = {
-        "expenditure_info": build_expenditure_info_table(df_info),
-        "expenditure_flow": build_expenditure_flow_table(df_flow),
-        "expenditure_usage": build_expenditure_usage_table(df_usage),
-        "expenditure_contract": build_expenditure_contract_table(df_contract)
+        "expenditures": build_expenditure_info_table(df_info),
+        "expenditure_flows": build_expenditure_flow_table(df_flow),
+        "expenditure_usages": build_expenditure_usage_table(df_usage),
+        "expenditure_contracts": build_expenditure_contract_table(df_contract)
     }
 
     # 検証
@@ -254,9 +262,9 @@ def build_expenditure_tables(input_dir: Path) -> dict[str, pd.DataFrame]:
     logger.info("検証")
     logger.info("=" * 60)
 
-    validate_table(tables["expenditure_info"], "expenditure_info", ["project_year", "project_id", "seq_no"])
-    validate_table(tables["expenditure_flow"], "expenditure_flow", ["project_year", "project_id", "seq_no"])
-    validate_table(tables["expenditure_usage"], "expenditure_usage", ["project_year", "project_id", "seq_no"])
-    validate_table(tables["expenditure_contract"], "expenditure_contract", ["project_year", "project_id", "seq_no"])
+    validate_table(tables["expenditures"], "expenditures", ["project_year", "project_id", "seq_no"])
+    validate_table(tables["expenditure_flows"], "expenditure_flows", ["project_year", "project_id", "seq_no"])
+    validate_table(tables["expenditure_usages"], "expenditure_usages", ["project_year", "project_id", "seq_no"])
+    validate_table(tables["expenditure_contracts"], "expenditure_contracts", ["project_year", "project_id", "seq_no"])
 
     return tables
