@@ -50,6 +50,10 @@ https://rssystem.go.jp/download-csv から入手したデータを加工しデ�
   - 対象: `input/2-*.csv`（2ファイル）
   - 出力: 2テーブル（`budget_summary`, `budget_detail`）
 
+- **支出先セクション**: [build_database/expenditure.md](./build_database/expenditure.md)
+  - 対象: `input/5-*.csv`（4ファイル）
+  - 出力: 4テーブル（`expenditure_info`, `expenditure_flow`, `expenditure_usage`, `expenditure_contract`）
+
 
 ## 設計
 
@@ -62,7 +66,8 @@ tools/
 │   ├─ __init__.py          # パッケージ初期化（空ファイル）
 │   ├─ common.py            # 共通関数（sanitize, normalize, load_csv）
 │   ├─ basic_info.py        # 基本情報セクション（1-*.csv → 5テーブル）
-│   └─ budget_execution.py  # 予算・執行セクション（2-*.csv → 2テーブル）
+│   ├─ budget_execution.py  # 予算・執行セクション（2-*.csv → 2テーブル）
+│   └─ expenditure.py       # 支出先セクション（5-*.csv → 4テーブル）
 ├─ requirements.txt          # pandas, neologdn
 └─ .venv/                    # 仮想環境
 ```
@@ -72,7 +77,8 @@ tools/
 ```
 docs/tools/build_database/
 ├─ basic_info.md             # 基本情報セクションの正規化方針
-└─ budget_execution.md       # 予算・執行セクションの正規化方針
+├─ budget_execution.md       # 予算・執行セクションの正規化方針
+└─ expenditure.md            # 支出先セクションの正規化方針
 ```
 
 ### 実装
@@ -84,8 +90,9 @@ docs/tools/build_database/
 **主要な処理フロー:**
 1. 基本情報セクションのテーブル構築
 2. 予算・執行セクションのテーブル構築
-3. SQLite への書き込み
-4. データ検証
+3. 支出先セクションのテーブル構築
+4. SQLite への書き込み
+5. データ検証
 
 **出力:** `output/rs_data.sqlite`
 
@@ -120,6 +127,23 @@ docs/tools/build_database/
 - `build_budget_execution_tables()`: エントリーポイント
 - `build_budget_summary_table()`: budget_summary テーブルの構築
 - `build_budget_detail_table()`: budget_detail テーブルの構築
+
+#### 支出先セクション（`expenditure.py`）
+
+`input/5-*.csv` から4つのテーブルを構築する
+
+**構築するテーブル:**
+- `expenditure_info`: 支出先情報（5-1）
+- `expenditure_flow`: 支出先ブロックのつながり（5-2）
+- `expenditure_usage`: 費目・使途（5-3）
+- `expenditure_contract`: 国庫債務負担行為等による契約（5-4）
+
+**主要な関数:**
+- `build_expenditure_tables()`: エントリーポイント
+- `build_expenditure_info_table()`: expenditure_info テーブルの構築
+- `build_expenditure_flow_table()`: expenditure_flow テーブルの構築
+- `build_expenditure_usage_table()`: expenditure_usage テーブルの構築
+- `build_expenditure_contract_table()`: expenditure_contract テーブルの構築
 
 #### 共通関数（`common.py`）
 

@@ -11,6 +11,7 @@ from pathlib import Path
 
 from build_database.basic_info import build_basic_info_tables
 from build_database.budget_execution import build_budget_execution_tables
+from build_database.expenditure import build_expenditure_tables
 
 # 定数
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
@@ -41,8 +42,11 @@ def main():
     # 予算・執行セクションのテーブルを構築
     budget_execution_tables = build_budget_execution_tables(INPUT_DIR)
 
+    # 支出先セクションのテーブルを構築
+    expenditure_tables = build_expenditure_tables(INPUT_DIR)
+
     # 全テーブルを統合
-    tables = {**basic_info_tables, **budget_execution_tables}
+    tables = {**basic_info_tables, **budget_execution_tables, **expenditure_tables}
 
     # SQLite に書き込み
     logger.info("\n" + "=" * 60)
