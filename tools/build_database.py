@@ -2,7 +2,7 @@
 """
 データベース構築スクリプト
 
-input/*.csv から SQLite データベースを生成する。
+tools/input/*.csv から SQLite データベースを生成する。
 """
 
 import logging
@@ -15,8 +15,8 @@ from build_database.expenditure import build_expenditure_tables
 
 # 定数
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
-INPUT_DIR = PROJECT_ROOT / "input"
-OUTPUT_DIR = PROJECT_ROOT / "output"
+INPUT_DIR = PROJECT_ROOT / "tools" / "input"
+OUTPUT_DIR = PROJECT_ROOT / "tools" / "output"
 
 # ロギング設定
 logging.basicConfig(

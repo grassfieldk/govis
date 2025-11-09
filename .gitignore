@@ -46,8 +46,10 @@ next-env.d.ts
 /supabase/
 
 # input data
-/input/*
-!/input/.gitkeep
+/tools/input/*
+!/tools/input/.gitkeep
+/tools/output/*
+!/tools/output/.gitkeep
 
 # working directory
 /work/*

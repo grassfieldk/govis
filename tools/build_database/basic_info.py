@@ -1,7 +1,7 @@
 """
 基本情報セクション
 
-input/1-*.csv から5つのテーブルを構築する。
+tools/input/1-*.csv から5つのテーブルを構築する。
 """
 
 import logging

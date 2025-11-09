@@ -4,7 +4,7 @@
 
 ## 概要
 
-- **対象データ**: `input/5-*.csv`（4ファイル、計 260,071 行）
+- **対象データ**: `tools/input/5-*.csv`（4ファイル、計 260,071 行）
 - **出力テーブル**: 4テーブル（`expenditure_info`, `expenditure_flow`, `expenditure_usage`, `expenditure_contract`）
 - **文字コード**: UTF-8 with BOM
 

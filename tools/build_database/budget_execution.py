@@ -1,7 +1,7 @@
 """
 予算・執行セクション
 
-input/2-*.csv から2つのテーブルを構築する。
+tools/input/2-*.csv から2つのテーブルを構築する。
 """
 
 import logging

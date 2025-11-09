@@ -4,7 +4,7 @@
 
 ## 概要
 
-- **対象データ**: `input/2-*.csv`（2ファイル、計 93,592 行）
+- **対象データ**: `tools/input/2-*.csv`（2ファイル、計 93,592 行）
 - **出力テーブル**: 2テーブル（`budget_summary`, `budget_detail`）
 - **文字コード**: UTF-8 with BOM
 

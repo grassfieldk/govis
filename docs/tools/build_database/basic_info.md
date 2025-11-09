@@ -4,7 +4,7 @@
 
 ## 概要
 
-- **対象データ**: `input/1-*.csv`（5ファイル、計 41,701 行）
+- **対象データ**: `tools/input/1-*.csv`（5ファイル、計 41,701 行）
 - **出力テーブル**: 5テーブル（`project`, `project_policy`, `project_law`, `project_subsidy`, `project_related`）
 - **文字コード**: UTF-8 with BOM
 

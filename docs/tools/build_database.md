@@ -95,17 +95,17 @@ LIMIT 10;
 各セクションのテーブル設計と正規化対象カラムの詳細は以下を参照:
 
 - **基本情報セクション**: [build_database/basic_info.md](./build_database/basic_info.md)
-  - 対象: `input/1-*.csv`（5ファイル）
+  - 対象: `tools/input/1-*.csv`（5ファイル）
   - 出力: 5テーブル（`projects_master`, `policies`, `laws`, `subsidies`, `related_projects`）
   - **注**: `projects_master` がマスタテーブルとなり、他のテーブルはこれを参照
 
 - **予算・執行セクション**: [build_database/budget_execution.md](./build_database/budget_execution.md)
-  - 対象: `input/2-*.csv`（2ファイル）
+  - 対象: `tools/input/2-*.csv`（2ファイル）
   - 出力: 2テーブル（`budgets`, `budget_items`）
   - **注**: `project_name` は削除済み、`projects_master` との JOIN で取得
 
 - **支出先セクション**: [build_database/expenditure.md](./build_database/expenditure.md)
-  - 対象: `input/5-*.csv`（4ファイル）
+  - 対象: `tools/input/5-*.csv`（4ファイル）
   - 出力: 4テーブル（`expenditures`, `expenditure_flows`, `expenditure_usages`, `expenditure_contracts`）
   - **注**: `project_name` は削除済み、`projects_master` との JOIN で取得
 
@@ -150,11 +150,11 @@ docs/tools/build_database/
 4. SQLite への書き込み
 5. データ検証
 
-**出力:** `output/rs_data.sqlite`
+**出力:** `tools/output/rs_data.sqlite`
 
 #### 基本情報セクション（`basic_info.py`）
 
-`input/1-*.csv` から5つのテーブルを構築する
+`tools/input/1-*.csv` から5つのテーブルを構築する
 
 **構築するテーブル（正規化済み）:**
 - `projects_master`: 事業基本情報マスタ（1-1 と 1-2 を結合）- **project_name を含む唯一のテーブル**
@@ -173,7 +173,7 @@ docs/tools/build_database/
 
 #### 予算・執行セクション（`budget_execution.py`）
 
-`input/2-*.csv` から2つのテーブルを構築する
+`tools/input/2-*.csv` から2つのテーブルを構築する
 
 **構築するテーブル（正規化済み）:**
 - `budgets`: 予算・執行サマリ（2-1）- project_name なし
@@ -186,7 +186,7 @@ docs/tools/build_database/
 
 #### 支出先セクション（`expenditure.py`）
 
-`input/5-*.csv` から4つのテーブルを構築する
+`tools/input/5-*.csv` から4つのテーブルを構築する
 
 **構築するテーブル（正規化済み）:**
 - `expenditures`: 支出先情報（5-1）- project_name なし
@@ -227,11 +227,11 @@ pip install -r tools/requirements.txt
 tools/.venv/bin/python3 tools/build_database.py
 
 # ビューの適用
-sqlite3 output/rs_data.sqlite < tools/build_database/create_views.sql
+sqlite3 tools/output/rs_data.sqlite < tools/build_database/create_views.sql
 ```
 
 **出力:**
-- `output/rs_data.sqlite` - 正規化済みデータベース（73MB、11テーブル、377,020行）
+- `tools/output/rs_data.sqlite` - 正規化済みデータベース（73MB、11テーブル、377,020行）
 - 11個の便利な VIEW が追加されます
 
 ## ER図

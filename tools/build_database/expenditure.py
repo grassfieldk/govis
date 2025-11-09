@@ -1,7 +1,7 @@
 """
 支出先セクション
 
-input/5-*.csv から4つのテーブルを構築する。
+tools/input/5-*.csv から4つのテーブルを構築する。
 """
 
 import logging
