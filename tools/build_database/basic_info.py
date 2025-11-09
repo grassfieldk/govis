@@ -1,7 +1,7 @@
 """
 基本情報セクション
 
-tools/input/1-*.csv から5つのテーブルを構築する。
+tools/input/1-*.csv から 5 つのテーブルを構築
 """
 
 import logging
@@ -29,8 +29,8 @@ def build_projects_master_table(df_org: pd.DataFrame, df_overview: pd.DataFrame)
 
     データソース: 1-1 + 1-2 (INNER JOIN)
 
-    このテーブルは事業の基本情報を一元管理するマスタテーブル。
-    他のすべての詳細テーブルはこのテーブルを外部キー参照する。
+    このテーブルは事業の基本情報を一元管理するマスタテーブル
+    他のすべての詳細テーブルはこのテーブルを外部キー参照する
     """
     logger.info("projects_master テーブル構築中...")
 
@@ -105,8 +105,6 @@ def build_policies_table(df: pd.DataFrame) -> pd.DataFrame:
     policies テーブルを構築（正規化済み詳細テーブル）
 
     データソース: 1-3（政策カラムが空でない行）
-
-    project_name は削除し、projects_master との JOIN で取得する設計。
     """
     logger.info("policies テーブル構築中...")
 
@@ -136,8 +134,6 @@ def build_laws_table(df: pd.DataFrame) -> pd.DataFrame:
     laws テーブルを構築（正規化済み詳細テーブル）
 
     データソース: 1-3（法令カラムが空でない行）
-
-    project_name は削除し、projects_master との JOIN で取得する設計。
     """
     logger.info("laws テーブル構築中...")
 
@@ -169,8 +165,6 @@ def build_subsidies_table(df: pd.DataFrame) -> pd.DataFrame:
     subsidies テーブルを構築（正規化済み詳細テーブル）
 
     データソース: 1-4
-
-    project_name は削除し、projects_master との JOIN で取得する設計。
     """
     logger.info("subsidies テーブル構築中...")
 
@@ -197,8 +191,6 @@ def build_related_projects_table(df: pd.DataFrame) -> pd.DataFrame:
     related_projects テーブルを構築（正規化済み詳細テーブル）
 
     データソース: 1-5
-
-    project_name は削除し、projects_master との JOIN で取得する設計。
     """
     logger.info("related_projects テーブル構築中...")
 
@@ -221,13 +213,13 @@ def build_related_projects_table(df: pd.DataFrame) -> pd.DataFrame:
 
 def build_basic_info_tables(input_dir: Path) -> dict[str, pd.DataFrame]:
     """
-    基本情報セクション（1-*.csv）から5つのテーブルを構築（正規化済み）
+    基本情報セクション（1-*.csv）から 5 つのテーブルを構築（正規化済み）
 
     Args:
-        input_dir: CSVファイルが格納されているディレクトリ
+        input_dir: CSV ファイルが格納されているディレクトリ
 
     Returns:
-        テーブル名をキー、DataFrameを値とする辞書
+        テーブル名をキー、DataFrame を値とする辞書
 
     正規化構造:
         - projects_master: 事業の基本情報マスタ（project_name を含む唯一のテーブル）
@@ -240,12 +232,12 @@ def build_basic_info_tables(input_dir: Path) -> dict[str, pd.DataFrame]:
     logger.info("基本情報セクション（正規化済み構造）")
     logger.info("=" * 60)
 
-    # CSV読み込み
-    df_org = load_csv(input_dir / "1-1_基本情報_組織情報.csv")
-    df_overview = load_csv(input_dir / "1-2_基本情報_事業概要等.csv")
-    df_policy_law = load_csv(input_dir / "1-3_基本情報_政策・施策、法令等.csv")
-    df_subsidy = load_csv(input_dir / "1-4_基本情報_補助率等.csv")
-    df_related = load_csv(input_dir / "1-5_基本情報_関連事業.csv")
+    # CSV 読み込み
+    df_org = load_csv(input_dir / "1-1_RS_2024_基本情報_組織情報.csv")
+    df_overview = load_csv(input_dir / "1-2_RS_2024_基本情報_事業概要等.csv")
+    df_policy_law = load_csv(input_dir / "1-3_RS_2024_基本情報_政策・施策、法令等.csv")
+    df_subsidy = load_csv(input_dir / "1-4_RS_2024_基本情報_補助率等.csv")
+    df_related = load_csv(input_dir / "1-5_RS_2024_基本情報_関連事業.csv")
 
     # サニタイズ・正規化
     df_org = apply_sanitize_and_normalize(df_org, NORMALIZE_COLUMNS)

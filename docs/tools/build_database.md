@@ -34,7 +34,7 @@ https://rssystem.go.jp/download-csv から入手したデータを加工しデ�
 ### クエリ例
 
 ```sql
--- VIEW を使った簡単なクエリ
+-- ビューを使った簡単なクエリ
 SELECT * FROM expenditures_with_project
 WHERE ministry = '内閣府'
 ORDER BY amount DESC LIMIT 10;
@@ -95,17 +95,17 @@ LIMIT 10;
 各セクションのテーブル設計と正規化対象カラムの詳細は以下を参照:
 
 - **基本情報セクション**: [build_database/basic_info.md](./build_database/basic_info.md)
-  - 対象: `tools/input/1-*.csv`（5ファイル）
+  - 対象: `tools/input/1-*_RS_2024_*.zip`
   - 出力: 5テーブル（`projects_master`, `policies`, `laws`, `subsidies`, `related_projects`）
   - **注**: `projects_master` がマスタテーブルとなり、他のテーブルはこれを参照
 
 - **予算・執行セクション**: [build_database/budget_execution.md](./build_database/budget_execution.md)
-  - 対象: `tools/input/2-*.csv`（2ファイル）
+  - 対象: `tools/input/2-*_RS_2024_*.zip`
   - 出力: 2テーブル（`budgets`, `budget_items`）
   - **注**: `project_name` は削除済み、`projects_master` との JOIN で取得
 
 - **支出先セクション**: [build_database/expenditure.md](./build_database/expenditure.md)
-  - 対象: `tools/input/5-*.csv`（4ファイル）
+  - 対象: `tools/input/5-*_RS_2024_*.zip`
   - 出力: 4テーブル（`expenditures`, `expenditure_flows`, `expenditure_usages`, `expenditure_contracts`）
   - **注**: `project_name` は削除済み、`projects_master` との JOIN で取得
 
@@ -116,16 +116,15 @@ LIMIT 10;
 
 ```
 tools/
-├─ build_database.py         # メインスクリプト（セクション統合）
+├─ build_database.py         # メインスクリプト
 ├─ build_database/
-│   ├─ __init__.py          # パッケージ初期化（空ファイル）
+│   ├─ __init__.py
 │   ├─ common.py            # 共通関数（sanitize, normalize, load_csv）
-│   ├─ basic_info.py        # 基本情報セクション（1-*.csv → 5テーブル）
-│   ├─ budget_execution.py  # 予算・執行セクション（2-*.csv → 2テーブル）
-│   ├─ expenditure.py       # 支出先セクション（5-*.csv → 4テーブル）
-│   └─ create_views.sql     # VIEW 定義（JOIN を隠蔽）
-├─ requirements.txt          # pandas, neologdn
-└─ .venv/                    # 仮想環境
+│   ├─ basic_info.py        # 基本情報セクション
+│   ├─ budget_execution.py  # 予算・執行セクション
+│   ├─ expenditure.py       # 支出先セクション
+│   └─ create_views.sql     # ビュー定義
+├─ requirements.txt
 ```
 
 ### ドキュメント
@@ -208,7 +207,7 @@ docs/tools/build_database/
 **主要な関数:**
 - `sanitize()`: 制御文字除去・欠損値統一
 - `normalize()`: neologdn による正規化
-- `load_csv()`: CSV 読み込み（UTF-8-SIG、dtype=str）
+- `load_csv()`: CSV ファイル読み込み
 - `apply_sanitize_and_normalize()`: DataFrame へのサニタイズと正規化の適用
 - `validate_table()`: テーブル検証（行数、主キー重複、NULL率）
 
@@ -223,16 +222,20 @@ python3 -m venv tools/.venv
 source tools/.venv/bin/activate
 pip install -r tools/requirements.txt
 
-# データベース生成
-tools/.venv/bin/python3 tools/build_database.py
+# RS システムからダウンロードした Zip ファイルを tools/input/ に配置
 
-# ビューの適用
-sqlite3 tools/output/rs_data.sqlite < tools/build_database/create_views.sql
+# データベース生成（Zip 解凍、CSV 処理、データベース構築）
+tools/.venv/bin/python3 tools/build_database.py
 ```
 
+**処理の流れ:**
+1. `tools/input/*.zip` を `tools/input/csv/` に解凍
+2. 解凍された CSV ファイルを `csv/` 直下に配置
+3. CSV ファイルからデータベースを構築
+4. ビューを適用
+
 **出力:**
-- `tools/output/rs_data.sqlite` - 正規化済みデータベース（73MB、11テーブル、377,020行）
-- 11個の便利な VIEW が追加されます
+- `tools/output/rs_data.sqlite`
 
 ## ER図
 

@@ -1,7 +1,7 @@
 """
 共通関数モジュール
 
-全セクションで使用する共通的な処理を提供する。
+全セクションで使用する共通的な処理
 """
 
 import logging
@@ -18,7 +18,7 @@ def sanitize(text: str) -> Optional[str]:
     """
     無効文字の除去・欠損値統一（全カラム対象）
 
-    - NULL文字除去
+    - NULL 文字除去
     - 制御文字を空白に置換
     - 改行コード統一
     - 前後空白除去
@@ -30,7 +30,7 @@ def sanitize(text: str) -> Optional[str]:
     # 文字列に変換
     text = str(text)
 
-    # NULL文字除去
+    # NULL 文字除去
     text = text.replace('\x00', '')
 
     # 制御文字を空白に（改行は保持）
@@ -51,7 +51,7 @@ def sanitize(text: str) -> Optional[str]:
 
 def normalize(text: str) -> Optional[str]:
     """
-    neologdn による正規化（選択的適用）
+    neologdn による正規化（一部カラム）
 
     - 全角半角統一
     - Unicode正規化
@@ -72,7 +72,7 @@ def load_csv(filepath: Path) -> pd.DataFrame:
     """
     CSV ファイルを読み込む
 
-    - UTF-8-SIG（BOM付き）
+    - UTF-8-SIG with BOM
     - 全カラムを文字列型として読み込み
     """
     logger.info(f"読み込み中: {filepath.name}")
@@ -86,11 +86,11 @@ def apply_sanitize_and_normalize(df: pd.DataFrame, normalize_columns: set) -> pd
     DataFrame 全体にサニタイズと正規化を適用
 
     Args:
-        df: 対象DataFrame
+        df: 対象 DataFrame
         normalize_columns: 正規化対象カラム名のセット
 
     Returns:
-        処理後のDataFrame
+        処理後の DataFrame
     """
     logger.info("サニタイズ・正規化を適用中...")
 
@@ -113,7 +113,7 @@ def validate_table(df: pd.DataFrame, table_name: str, primary_keys: list) -> Non
     テーブルのデータ品質を検証
 
     Args:
-        df: 対象DataFrame
+        df: 対象 DataFrame
         table_name: テーブル名
         primary_keys: 主キーカラム名のリスト
     """
@@ -129,8 +129,8 @@ def validate_table(df: pd.DataFrame, table_name: str, primary_keys: list) -> Non
     else:
         logger.info("  主キー重複: なし")
 
-    # NULL率チェック（50%以上のカラムを報告）
+    # NULL 率チェック（50% 以上のカラムを報告）
     null_rates = df.isna().sum() / len(df)
     high_null_cols = null_rates[null_rates > 0.5]
     if len(high_null_cols) > 0:
-        logger.info(f"  NULL率50%超のカラム: {len(high_null_cols)} 個")
+        logger.info(f"  NULL 率 50% 超のカラム: {len(high_null_cols)} 個")

@@ -1,7 +1,7 @@
 """
 予算・執行セクション
 
-tools/input/2-*.csv から2つのテーブルを構築する。
+tools/input/2-*.csv から 2 つのテーブルを構築
 """
 
 import logging
@@ -27,9 +27,7 @@ def build_budget_summary_table(df: pd.DataFrame) -> pd.DataFrame:
     budgets テーブルを構築（正規化済み）
 
     データソース: 2-1
-    特徴: 1事業・1予算年度につき複数行（会計区分ごと + 合計行）
-
-    project_name は削除し、projects_master との JOIN で取得する設計。
+    特徴: 1 事業・1 予算年度につき複数行（会計区分ごと + 合計行）
     """
     logger.info("budgets テーブル構築中...")
 
@@ -89,9 +87,7 @@ def build_budget_detail_table(df: pd.DataFrame) -> pd.DataFrame:
     budget_items テーブルを構築（正規化済み）
 
     データソース: 2-2
-    特徴: 1事業・1予算年度につき、歳出予算項目（目）ごとに1行
-
-    project_name は削除し、projects_master との JOIN で取得する設計。
+    特徴: 1 事業・1 予算年度につき、歳出予算項目（目）ごとに 1 行
     """
     logger.info("budget_items テーブル構築中...")
 
@@ -135,13 +131,13 @@ def build_budget_detail_table(df: pd.DataFrame) -> pd.DataFrame:
 
 def build_budget_execution_tables(input_dir: Path) -> dict[str, pd.DataFrame]:
     """
-    予算・執行セクション（2-*.csv）から2つのテーブルを構築（正規化済み）
+    予算・執行セクション（2-*.csv）から 2 つのテーブルを構築（正規化済み）
 
     Args:
-        input_dir: CSVファイルが格納されているディレクトリ
+        input_dir: CSV ファイルが格納されているディレクトリ
 
     Returns:
-        テーブル名をキー、DataFrameを値とする辞書
+        テーブル名をキー、DataFrame を値とする辞書
 
     正規化構造:
         - budgets: 予算・執行のサマリ（project_name なし、外部キー参照）
@@ -152,8 +148,8 @@ def build_budget_execution_tables(input_dir: Path) -> dict[str, pd.DataFrame]:
     logger.info("=" * 60)
 
     # CSV読み込み
-    df_summary = load_csv(input_dir / "2-1_予算・執行_サマリ.csv")
-    df_detail = load_csv(input_dir / "2-2_予算・執行_予算種別・歳出予算項目.csv")
+    df_summary = load_csv(input_dir / "2-1_RS_2024_予算・執行_サマリ.csv")
+    df_detail = load_csv(input_dir / "2-2_RS_2024_予算・執行_予算種別・歳出予算項目.csv")
 
     # サニタイズ・正規化
     df_summary = apply_sanitize_and_normalize(df_summary, NORMALIZE_COLUMNS)

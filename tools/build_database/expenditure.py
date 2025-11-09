@@ -1,7 +1,7 @@
 """
 支出先セクション
 
-tools/input/5-*.csv から4つのテーブルを構築する。
+tools/input/5-*.csv から 4 つのテーブルを構築
 """
 
 import logging
@@ -37,9 +37,7 @@ def build_expenditure_info_table(df: pd.DataFrame) -> pd.DataFrame:
     expenditures テーブルを構築（正規化済み）
 
     データソース: 5-1
-    特徴: 1事業につき複数の支出先ブロック、各ブロック内に複数の支出先
-
-    project_name は削除し、projects_master との JOIN で取得する設計。
+    特徴: 1 事業につき複数の支出先ブロック、各ブロック内に複数の支出先
     """
     logger.info("expenditures テーブル構築中...")
 
@@ -91,8 +89,6 @@ def build_expenditure_flow_table(df: pd.DataFrame) -> pd.DataFrame:
 
     データソース: 5-2
     特徴: 支出元ブロック → 支出先ブロックの資金の流れ
-
-    project_name は削除し、projects_master との JOIN で取得する設計。
     """
     logger.info("expenditure_flows テーブル構築中...")
 
@@ -132,8 +128,6 @@ def build_expenditure_usage_table(df: pd.DataFrame) -> pd.DataFrame:
 
     データソース: 5-3
     特徴: 支出先ごとの費目・使途の内訳
-
-    project_name は削除し、projects_master との JOIN で取得する設計。
     """
     logger.info("expenditure_usages テーブル構築中...")
 
@@ -171,8 +165,6 @@ def build_expenditure_contract_table(df: pd.DataFrame) -> pd.DataFrame:
 
     データソース: 5-4
     特徴: 国庫債務負担行為等の複数年度契約情報
-
-    project_name は削除し、projects_master との JOIN で取得する設計。
     """
     logger.info("expenditure_contracts テーブル構築中...")
 
@@ -218,10 +210,10 @@ def build_expenditure_tables(input_dir: Path) -> dict[str, pd.DataFrame]:
     支出先セクション（5-*.csv）から4つのテーブルを構築（正規化済み）
 
     Args:
-        input_dir: CSVファイルが格納されているディレクトリ
+        input_dir: CSV ファイルが格納されているディレクトリ
 
     Returns:
-        テーブル名をキー、DataFrameを値とする辞書
+        テーブル名をキー、DataFrame を値とする辞書
 
     正規化構造:
         - expenditures: 支出先情報（project_name なし、外部キー参照）
@@ -233,11 +225,11 @@ def build_expenditure_tables(input_dir: Path) -> dict[str, pd.DataFrame]:
     logger.info("支出先セクション（正規化済み構造）")
     logger.info("=" * 60)
 
-    # CSV読み込み
-    df_info = load_csv(input_dir / "5-1_支出先_支出情報.csv")
-    df_flow = load_csv(input_dir / "5-2_支出先_支出ブロックのつながり.csv")
-    df_usage = load_csv(input_dir / "5-3_支出先_費目・使途.csv")
-    df_contract = load_csv(input_dir / "5-4_支出先_国庫債務負担行為等による契約.csv")
+    # CSV 読み込み
+    df_info = load_csv(input_dir / "5-1_RS_2024_支出先_支出情報.csv")
+    df_flow = load_csv(input_dir / "5-2_RS_2024_支出先_支出ブロックのつながり.csv")
+    df_usage = load_csv(input_dir / "5-3_RS_2024_支出先_費目・使途.csv")
+    df_contract = load_csv(input_dir / "5-4_RS_2024_支出先_国庫債務負担行為等による契約.csv")
 
     # サニタイズ・正規化
     df_info = apply_sanitize_and_normalize(df_info, NORMALIZE_COLUMNS)

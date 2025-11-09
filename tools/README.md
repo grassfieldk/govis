@@ -29,26 +29,23 @@ python3 ./tools/build_database.py
 
 **入力**
 
-- `tools/input/1-1_基本情報_組織情報.csv`
-- `tools/input/1-2_基本情報_事業概要等.csv`
-- `tools/input/1-3_基本情報_政策・施策、法令等.csv`
-- `tools/input/1-4_基本情報_補助率等.csv`
-- `tools/input/1-5_基本情報_関連事業.csv`
+RS システムからダウンロードした Zip ファイル
+
+- `tools/input/
+  - `1-1_RS_2024_基本情報_組織情報.zip`
+  - `1-2_RS_2024_基本情報_事業概要等.zip`
+  - `1-3_RS_2024_基本情報_政策・施策、法令等.zip`
+  - `1-4_RS_2024_基本情報_補助率等.zip`
+  - `1-5_RS_2024_基本情報_関連事業.zip`
+  - `2-1_RS_2024_予算・執行_サマリ.zip`
+  - `2-2_RS_2024_予算・執行_予算種別・歳出予算項目.zip`
+  - `5-1_RS_2024_支出先_支出情報.zip`
+  - `5-2_RS_2024_支出先_支出ブロックのつながり.zip`
+  - `5-3_RS_2024_支出先_費目・使途.zip`
+  - `5-4_RS_2024_支出先_国庫債務負担行為等による契約.zip`
 
 **出力**
 
-- `tools/output/rs_data.sqlite` (11テーブル + 11ビュー)
-  - `projects_master` - 事業基本情報マスタ
-  - `policies` - 政策・施策との紐付け
-  - `laws` - 法令との紐付け
-  - `subsidies` - 補助率情報
-  - `related_projects` - 関連事業
-  - `budgets` - 予算・執行サマリ
-  - `budget_items` - 歳出予算項目の詳細
-  - `expenditures` - 支出先情報
-  - `expenditure_flows` - 支出先ブロックのつながり
-  - `expenditure_usages` - 費目・使途
-  - `expenditure_contracts` - 国庫債務負担行為等による契約
-  - 11個の VIEW（各テーブルに対応する *_with_project ビュー + projects_summary）
+- `tools/output/rs_data.sqlite`
 
 詳細は `docs/tools/build_database.md` を参照してください
