@@ -1,6 +1,10 @@
 "use client";
 
-import { BarChart3, Home } from "lucide-react";
+import {
+  ChartNoAxesCombined,
+  FileChartColumn,
+  LayoutDashboard,
+} from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -32,34 +36,30 @@ const Header = () => {
             <Button
               variant={pathname === "/dashboard" ? "default" : "ghost"}
               size="sm"
-              className="hidden sm:flex"
+              className="flex"
             >
-              <Home className="w-4 h-4 mr-2" />
-              ダッシュボード
+              <LayoutDashboard className="w-4 h-4" />
+              <p className="hidden sm:inline-block">ダッシュボード</p>
             </Button>
+          </Link>
+          <Link href="/charts">
             <Button
-              variant={pathname === "/dashboard" ? "default" : "ghost"}
+              variant={pathname === "/charts" ? "default" : "ghost"}
               size="sm"
-              className="sm:hidden p-2"
+              className="flex"
             >
-              <Home className="w-4 h-4" />
+              <ChartNoAxesCombined className="w-4 h-4" />
+              <p className="hidden sm:inline-block">グラフビュー</p>
             </Button>
           </Link>
           <Link href="/analysis">
             <Button
               variant={pathname === "/analysis" ? "default" : "ghost"}
               size="sm"
-              className="hidden sm:flex"
+              className="flex"
             >
-              <BarChart3 className="w-4 h-4 mr-2" />
-              データ分析
-            </Button>
-            <Button
-              variant={pathname === "/analysis" ? "default" : "ghost"}
-              size="sm"
-              className="sm:hidden p-2"
-            >
-              <BarChart3 className="w-4 h-4" />
+              <FileChartColumn className="w-4 h-4" />
+              <p className="hidden sm:inline-block">データ分析</p>
             </Button>
           </Link>
         </nav>
