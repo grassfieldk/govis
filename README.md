@@ -106,6 +106,7 @@ python tools/build_database.py
 [開発環境構築](#開発環境構築) が完了したら、開発環境として起動してください
 
 ```bash
+npx supabase start # ローカル環境の Supabase を使う場合
 npm run dev
 ```
 
