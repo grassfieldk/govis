@@ -16,6 +16,8 @@ if [ ! -d "$PROJECT_ROOT/supabase" ]; then
     echo "Supabase 環境を作成します"
     npx supabase init > /dev/null
     echo "Supabase 環境が作成されました"
+else
+    echo "Supabase 環境は既に作成されています"
 fi
 
 # supabase start の実行（既に起動している場合はスキップ）
@@ -24,7 +26,14 @@ if ! npx supabase status 2>&1 | grep -q "is running"; then
     npx supabase start > /dev/null
     sleep 5
     echo "Supabase サーバーが起動しました"
+else
+    echo "Supabase サーバーは既に起動しています"
 fi
+
+# データベースのリセット（テーブル作成を含む）
+echo "データベースを初期化します（seed.sql を実行）"
+npx supabase db reset > /dev/null
+echo "データベースの初期化が完了しました"
 
 # supabase status の実行と情報取得
 echo "Supabase サーバ情報を取得します"

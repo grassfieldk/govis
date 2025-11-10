@@ -4,8 +4,8 @@
 
 ## 概要
 
-- **対象データ**: `tools/input/5-*_RS_2024_*.zip`
-- **出力テーブル**: `expenditure_info`, `expenditure_flow`, `expenditure_usage`, `expenditure_contract`
+- **対象データ**: `tools/input/5-*_RS_2024_*.zip`（4ファイル）
+- **出力テーブル**: 4テーブル（`expenditures`, `expenditure_flows`, `expenditure_usages`, `expenditure_contracts`）
 - **文字コード**: UTF-8 with BOM
 
 **共通の正規化方針**: [../build_database.md](../build_database.md#共通の正規化方針) を参照
@@ -14,7 +14,6 @@
 ## 正規化対象カラム
 
 **名称系**
-- 事業名
 - 府省庁
 - 政策所管府省庁
 - 局・庁
@@ -53,23 +52,23 @@
 
 ## 出力テーブル構造
 
-### `expenditure_info`（支出先情報）
+### `expenditures`（支出先情報）
 
 データソース: `5-1_支出先_支出情報.csv`
 
-**特徴**:
+**設計:**
 - 1事業につき複数の支出先ブロックが存在
 - 各ブロック内に複数の支出先が存在
 - 金額データはTEXT型で保持（カンマ区切り、全角数字混在の可能性）
+- project_name は `projects_master` から JOIN で取得
 
-**主キー**: `project_year`, `project_id`, `seq_no`
+**主キー**: `(project_year, project_id, seq_no)`
 
 **カラム構成**:
 ```
 - project_year (INTEGER): 事業年度
 - project_id (TEXT): 予算事業ID
 - seq_no (INTEGER): 連番
-- project_name (TEXT, 正規化): 事業名
 - block_number (TEXT): 支出先ブロック番号
 - block_name (TEXT, 正規化): 支出先ブロック名
 - num_recipients (TEXT): 支出先の数
@@ -91,22 +90,22 @@
 - other_contract (TEXT): その他の契約
 ```
 
-### `expenditure_flow`（支出先ブロックのつながり）
+### `expenditure_flows`（支出先ブロックのつながり）
 
 データソース: `5-2_支出先_支出ブロックのつながり.csv`
 
-**特徴**:
+**設計:**
 - 支出元ブロック → 支出先ブロックの資金の流れを表現
 - 「担当組織からの支出」が空でない場合は起点ブロック
+- project_name は `projects_master` から JOIN で取得
 
-**主キー**: `project_year`, `project_id`, `seq_no`
+**主キー**: `(project_year, project_id, seq_no)`
 
 **カラム構成**:
 ```
 - project_year (INTEGER): 事業年度
 - project_id (TEXT): 予算事業ID
 - seq_no (INTEGER): 連番
-- project_name (TEXT, 正規化): 事業名
 - source_block (TEXT): 支出元の支出先ブロック
 - source_block_name (TEXT, 正規化): 支出元の支出先ブロック名
 - from_organization (TEXT): 担当組織からの支出
@@ -118,22 +117,22 @@
 - indirect_cost_amount (TEXT): 国自らが支出する間接経費の金額
 ```
 
-### `expenditure_usage`（費目・使途）
+### `expenditure_usages`（費目・使途）
 
 データソース: `5-3_支出先_費目・使途.csv`
 
-**特徴**:
+**設計:**
 - 支出先ごとの費目・使途の内訳
 - 同一支出先・契約概要に対して複数の費目・使途が存在
+- project_name は `projects_master` から JOIN で取得
 
-**主キー**: `project_year`, `project_id`, `seq_no`
+**主キー**: `(project_year, project_id, seq_no)`
 
 **カラム構成**:
 ```
 - project_year (INTEGER): 事業年度
 - project_id (TEXT): 予算事業ID
 - seq_no (INTEGER): 連番
-- project_name (TEXT, 正規化): 事業名
 - block_number (TEXT): 支出先ブロック番号
 - recipient_name (TEXT, 正規化): 支出先名
 - corporate_number (TEXT): 法人番号
@@ -143,22 +142,22 @@
 - amount (TEXT): 金額
 ```
 
-### `expenditure_contract`（国庫債務負担行為等による契約）
+### `expenditure_contracts`（国庫債務負担行為等による契約）
 
 データソース: `5-4_支出先_国庫債務負担行為等による契約.csv`
 
-**特徴**:
+**設計:**
 - 国庫債務負担行為等の複数年度契約情報
+- project_name は `projects_master` から JOIN で取得
 - 長期契約の詳細を記録
 
-**主キー**: `project_year`, `project_id`, `seq_no`
+**主キー**: `(project_year, project_id, seq_no)`
 
 **カラム構成**:
 ```
 - project_year (INTEGER): 事業年度
 - project_id (TEXT): 予算事業ID
 - seq_no (INTEGER): 連番
-- project_name (TEXT, 正規化): 事業名
 - block_number (TEXT): 支出先ブロック（国庫債務負担行為等による契約）
 - contractor_name (TEXT, 正規化): 契約先名（国庫債務負担行為等による契約）
 - contractor_corporate_number (TEXT): 契約先の法人番号（国庫債務負担行為等による契約）

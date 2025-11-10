@@ -111,9 +111,9 @@ def build_budget_detail_table(df: pd.DataFrame) -> pd.DataFrame:
     result["budget_type"] = df["予算種別"]
 
     # 歳出予算項目
-    result["ministry"] = df["所管"]
+    result["jurisdiction"] = df["所管"]
     result["organization"] = df["組織・勘定"]
-    result["item"] = df["項"]
+    result["budget_item"] = df["項"]
     result["category"] = df["目"]
     result["supplement_info"] = df["歳出予算項目の補足情報"]
 

@@ -42,9 +42,6 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# localhost supabase
-/supabase/
-
 # input data
 /tools/input/*
 !/tools/input/.gitkeep
