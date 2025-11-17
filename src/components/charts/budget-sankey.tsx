@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import type { SankeyLinkDatum, SankeyNodeDatum } from "@nivo/sankey";
 import { ResponsiveSankey } from "@nivo/sankey";
-import type { SankeyNodeDatum, SankeyLinkDatum } from "@nivo/sankey";
+import { useEffect, useState } from "react";
 
 interface SankeyNode {
   id: string;
@@ -100,7 +100,9 @@ export function BudgetBySankeyChart() {
           .sort((a, b) => b[1].total - a[1].total)
           .slice(0, 5);
 
-        const top5MinistryNames = new Set(sortedMinistries.map(([name]) => name));
+        const top5MinistryNames = new Set(
+          sortedMinistries.map(([name]) => name),
+        );
 
         const nodes: Set<string> = new Set();
         const links: SankeyLink[] = [];
@@ -109,7 +111,9 @@ export function BudgetBySankeyChart() {
 
         for (const [ministry, ministryData] of sortedMinistries) {
           nodes.add(ministry);
-          const ministryValueInMillions = Math.floor(ministryData.total / 1000000);
+          const ministryValueInMillions = Math.floor(
+            ministryData.total / 1000000,
+          );
           if (ministryValueInMillions > 0) {
             links.push({
               source: "全体予算",
@@ -124,7 +128,9 @@ export function BudgetBySankeyChart() {
             const project = ministryData.projects[i];
             if (i < 5) {
               nodes.add(project.name);
-              const projectValueInMillions = Math.floor(project.value / 1000000);
+              const projectValueInMillions = Math.floor(
+                project.value / 1000000,
+              );
               if (projectValueInMillions > 0) {
                 links.push({
                   source: ministry,
@@ -140,7 +146,9 @@ export function BudgetBySankeyChart() {
           if (otherProjectValue > 0) {
             const otherKey = `${ministry}_Other`;
             nodes.add(otherKey);
-            const otherValueInMillions = Math.floor(otherProjectValue / 1000000);
+            const otherValueInMillions = Math.floor(
+              otherProjectValue / 1000000,
+            );
             if (otherValueInMillions > 0) {
               links.push({
                 source: ministry,
@@ -173,7 +181,9 @@ export function BudgetBySankeyChart() {
         const sankeyData: SankeyData = {
           nodes: Array.from(nodes).map((id) => ({
             id,
-            description: ministryDescriptions[id as keyof typeof ministryDescriptions] || "",
+            description:
+              ministryDescriptions[id as keyof typeof ministryDescriptions] ||
+              "",
           })),
           links,
         };
@@ -236,7 +246,11 @@ export function BudgetBySankeyChart() {
           from: "color",
           modifiers: [["darker", 1]],
         }}
-        nodeTooltip={({ node }: { node: SankeyNodeDatum<SankeyNode, SankeyLink> }) => {
+        nodeTooltip={({
+          node,
+        }: {
+          node: SankeyNodeDatum<SankeyNode, SankeyLink>;
+        }) => {
           const formattedValue = node.value.toLocaleString("ja-JP");
           return (
             <div
@@ -252,20 +266,34 @@ export function BudgetBySankeyChart() {
               <strong>{node.id}</strong>
               <div style={{ marginTop: "4px" }}>{formattedValue} 百万円</div>
               {node.description && (
-                <div style={{ marginTop: "4px", fontSize: "11px", color: "#666", whiteSpace: "normal" }}>
+                <div
+                  style={{
+                    marginTop: "4px",
+                    fontSize: "11px",
+                    color: "#666",
+                    whiteSpace: "normal",
+                  }}
+                >
                   {node.description}
                 </div>
               )}
             </div>
           );
         }}
-        linkTooltip={({ link }: { link: SankeyLinkDatum<SankeyNode, SankeyLink> }) => {
+        linkTooltip={({
+          link,
+        }: {
+          link: SankeyLinkDatum<SankeyNode, SankeyLink>;
+        }) => {
           const formattedValue = link.value.toLocaleString("ja-JP");
           const targetId =
             typeof link.target === "string"
               ? link.target
               : (link.target as SankeyNodeDatum<SankeyNode, SankeyLink>).id;
-          const targetNode = link.target as SankeyNodeDatum<SankeyNode, SankeyLink>;
+          const targetNode = link.target as SankeyNodeDatum<
+            SankeyNode,
+            SankeyLink
+          >;
           const targetDescription = targetNode?.description || "";
 
           return (
@@ -284,7 +312,14 @@ export function BudgetBySankeyChart() {
               </div>
               <div style={{ marginTop: "4px" }}>{formattedValue} 百万円</div>
               {targetDescription && (
-                <div style={{ marginTop: "6px", fontSize: "11px", color: "#666", whiteSpace: "normal" }}>
+                <div
+                  style={{
+                    marginTop: "6px",
+                    fontSize: "11px",
+                    color: "#666",
+                    whiteSpace: "normal",
+                  }}
+                >
                   {targetDescription}
                 </div>
               )}

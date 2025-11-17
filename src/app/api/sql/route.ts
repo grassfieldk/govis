@@ -2,7 +2,7 @@ import { createClient } from "@supabase/supabase-js";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL || "",
-  process.env.SUPABASE_SERVICE_ROLE_KEY || ""
+  process.env.SUPABASE_SERVICE_ROLE_KEY || "",
 );
 
 interface SqlRequest {
@@ -21,7 +21,7 @@ export async function POST(request: Request): Promise<Response> {
     if (!query || typeof query !== "string") {
       return Response.json(
         { error: "query フィールドが必要です" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 

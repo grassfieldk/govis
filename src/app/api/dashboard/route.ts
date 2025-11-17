@@ -1,9 +1,9 @@
-import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { NextResponse } from "next/server";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL || "",
-  process.env.SUPABASE_SERVICE_ROLE_KEY || ""
+  process.env.SUPABASE_SERVICE_ROLE_KEY || "",
 );
 
 /**
@@ -63,12 +63,17 @@ export async function GET() {
       0,
     );
 
-    const ministryBreakdown = ministryData.slice(0, 5).map((row: Record<string, unknown>) => ({
-      ministry: String(row.ministry || ""),
-      amount: safeParseFloat(row.total_amount),
-      projects: Number(row.project_count || 0),
-      percentage: totalAmount > 0 ? (safeParseFloat(row.total_amount) / totalAmount) * 100 : 0,
-    }));
+    const ministryBreakdown = ministryData
+      .slice(0, 5)
+      .map((row: Record<string, unknown>) => ({
+        ministry: String(row.ministry || ""),
+        amount: safeParseFloat(row.total_amount),
+        projects: Number(row.project_count || 0),
+        percentage:
+          totalAmount > 0
+            ? (safeParseFloat(row.total_amount) / totalAmount) * 100
+            : 0,
+      }));
 
     // === 総事業数 ===
     const projectCountQuery = `
@@ -110,14 +115,16 @@ export async function GET() {
       0,
     );
 
-    const contractTypes = contractTypeData.map((row: Record<string, unknown>) => ({
-      type: String(row.contract_method || ""),
-      count: safeParseFloat(row.count),
-      percentage:
-        totalContractCount > 0
-          ? (safeParseFloat(row.count) / totalContractCount) * 100
-          : 0,
-    }));
+    const contractTypes = contractTypeData.map(
+      (row: Record<string, unknown>) => ({
+        type: String(row.contract_method || ""),
+        count: safeParseFloat(row.count),
+        percentage:
+          totalContractCount > 0
+            ? (safeParseFloat(row.count) / totalContractCount) * 100
+            : 0,
+      }),
+    );
 
     // === 競争性指標 ===
     const competitiveTypes = ["一般競争契約", "指名競争契約"];
@@ -160,7 +167,8 @@ export async function GET() {
         COUNT(*) as count
       FROM size_categories
       GROUP BY category
-    `;    const sizeDistData = await executeSQLQuery(sizeDistQuery);
+    `;
+    const sizeDistData = await executeSQLQuery(sizeDistQuery);
     const sizeDistribution: Record<string, number> = {};
     sizeDistData.forEach((row: Record<string, unknown>) => {
       sizeDistribution[String(row.category || "")] = safeParseFloat(row.count);
@@ -180,11 +188,13 @@ export async function GET() {
     `;
 
     const topContractorsData = await executeSQLQuery(topContractorsQuery);
-    const topContractors = topContractorsData.map((row: Record<string, unknown>) => ({
-      contractor: String(row.contractor || ""),
-      count: safeParseFloat(row.count),
-      amount: safeParseFloat(row.total_amount),
-    }));
+    const topContractors = topContractorsData.map(
+      (row: Record<string, unknown>) => ({
+        contractor: String(row.contractor || ""),
+        count: safeParseFloat(row.count),
+        amount: safeParseFloat(row.total_amount),
+      }),
+    );
 
     // === 高額契約案件（TOP 5） ===
     const highValueQuery = `
@@ -200,12 +210,14 @@ export async function GET() {
     `;
 
     const highValueData = await executeSQLQuery(highValueQuery);
-    const highValueContracts = highValueData.map((row: Record<string, unknown>, index: number) => ({
-      contractName: String(row.contract_name || ""),
-      amount: String(safeParseFloat(row.amount)),
-      ministry: String(row.ministry || ""),
-      id: `contract-${index}`,
-    }));
+    const highValueContracts = highValueData.map(
+      (row: Record<string, unknown>, index: number) => ({
+        contractName: String(row.contract_name || ""),
+        amount: String(safeParseFloat(row.amount)),
+        ministry: String(row.ministry || ""),
+        id: `contract-${index}`,
+      }),
+    );
 
     // === 費目別支出分析 ===
     const expenseQuery = `
@@ -267,11 +279,7 @@ export async function GET() {
 
     const transparencyScore = Math.max(
       0,
-      Math.min(
-        100,
-        competitiveness * 0.6 +
-          (100 - singleBidderRatio) * 0.4,
-      ),
+      Math.min(100, competitiveness * 0.6 + (100 - singleBidderRatio) * 0.4),
     );
 
     // === レスポンスデータの構築 ===
