@@ -4,7 +4,6 @@ import {
   Briefcase,
   Building2,
   Calculator,
-  Database,
   Eye,
   Info,
   Shield,
@@ -434,8 +433,6 @@ export default async function DashboardPage() {
       "支出額が多い主要な契約先を表示しています。政府調達の主要な受注者を把握できます。",
     highValueContracts:
       "特に支出額が大きい契約案件を表示しています。大型事業の内容と担当府省庁を確認できます。",
-    dataSource:
-      "このダッシュボードで使用しているデータの出典と最終更新日を表示しています。",
     totalProjects: "2024年度に実施された行政事業の総件数です。",
     uniqueContractors: "政府と契約を結んでいる企業・団体の総数です。",
     averageAmount:
@@ -615,73 +612,6 @@ export default async function DashboardPage() {
                     </p>
                   </div>
                 ))}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-1 gap-6 mb-8">
-          {/* 10. データ出典と詳細情報 */}
-          <Card>
-            <CardHeader>
-              <SectionTitle
-                title="データ出典と分析詳細"
-                icon={<Database className="w-5 h-5" />}
-                tooltip={sectionDescriptions.dataSource}
-              />
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="space-y-2">
-                  <h4 className="text-sm font-semibold">データソース</h4>
-                  <div className="flex items-center space-x-2">
-                    <Database className="w-4 h-4 text-muted-foreground" />
-                    <a
-                      href="https://rssystem.go.jp/download-csv/2024"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-sm text-blue-600 hover:underline"
-                    >
-                      行政事業レビューデータ
-                    </a>
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    最終更新:{" "}
-                    {data.summary.lastUpdated || "データベースから取得"}
-                  </p>
-                </div>
-
-                <div className="space-y-2">
-                  <h4 className="text-sm font-semibold">分析範囲</h4>
-                  <p className="text-xs text-muted-foreground">
-                    • 支出情報: {data.summary.totalProjects.toLocaleString()}
-                    件の事業
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    • 費目詳細:{" "}
-                    {data.expenseAnalysis.totalExpenseRecords.toLocaleString()}
-                    件の支出記録
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    • 契約先: {data.summary.uniqueContractors.toLocaleString()}
-                    社・団体
-                  </p>
-                </div>
-
-                <div className="space-y-2">
-                  <h4 className="text-sm font-semibold">透明性指標</h4>
-                  <p className="text-xs text-muted-foreground">
-                    競争入札率:{" "}
-                    {data.transparency.competitiveContractRatio.toFixed(1)}%
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    透明性スコア:{" "}
-                    {data.transparency.transparencyScore.toFixed(1)}点
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    総支出額: {formatCurrency(data.summary.totalAmount)}
-                  </p>
-                </div>
               </div>
             </CardContent>
           </Card>

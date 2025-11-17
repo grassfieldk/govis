@@ -116,8 +116,8 @@ export async function executeSQLQuery(sqlQuery: string) {
     }
 
     // SupabaseのRPC関数を使用して動的SQLを実行
-    const { data, error } = await supabase.rpc("execute_sql_query", {
-      query_text: sqlQuery,
+    const { data, error } = await supabase.rpc("exec_sql", {
+      sql: sqlQuery,
     });
 
     console.log("RPC実行結果:", { data, error });
