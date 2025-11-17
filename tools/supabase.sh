@@ -49,12 +49,14 @@ STATUS_OUTPUT=$(npx supabase status 2>/dev/null)
 # URL と API Key を抽出
 SUPABASE_URL=$(echo "$STATUS_OUTPUT" | grep -oP 'API URL: \K[^\s]+' || echo "")
 SUPABASE_ANON_KEY=$(echo "$STATUS_OUTPUT" | grep -oP 'Publishable key: \K[^\s]+' || echo "")
+SUPABASE_SERVICE_ROLE_KEY=$(echo "$STATUS_OUTPUT" | grep -oP 'Secret key: \K[^\s]+' || echo "")
 if [ -z "$SUPABASE_URL" ] || [ -z "$SUPABASE_ANON_KEY" ]; then
     echo "エラー: Supabase の接続情報を取得できませんでした" >&2
     exit 1
 fi
-echo "  SUPABASE_URL     : ${SUPABASE_URL}"
-echo "  SUPABASE_ANON_KEY: ${SUPABASE_ANON_KEY}"
+echo "  SUPABASE_URL              : ${SUPABASE_URL}"
+echo "  SUPABASE_ANON_KEY         : ${SUPABASE_ANON_KEY}"
+echo "  SUPABASE_SERVICE_ROLE_KEY : ${SUPABASE_SERVICE_ROLE_KEY}"
 
 # .env ファイルの作成/更新
 if [ ! -f "$ENV_FILE" ]; then
@@ -63,9 +65,11 @@ fi
 if [[ "$OSTYPE" == "darwin"* ]]; then
     sed -i '' "s|NEXT_PUBLIC_SUPABASE_URL=.*|NEXT_PUBLIC_SUPABASE_URL=$SUPABASE_URL|" "$ENV_FILE"
     sed -i '' "s|NEXT_PUBLIC_SUPABASE_ANON_KEY=.*|NEXT_PUBLIC_SUPABASE_ANON_KEY=$SUPABASE_ANON_KEY|" "$ENV_FILE"
+    sed -i '' "s|SUPABASE_SERVICE_ROLE_KEY=.*|SUPABASE_SERVICE_ROLE_KEY=$SUPABASE_SERVICE_ROLE_KEY|" "$ENV_FILE"
 else
     sed -i "s|NEXT_PUBLIC_SUPABASE_URL=.*|NEXT_PUBLIC_SUPABASE_URL=$SUPABASE_URL|" "$ENV_FILE"
     sed -i "s|NEXT_PUBLIC_SUPABASE_ANON_KEY=.*|NEXT_PUBLIC_SUPABASE_ANON_KEY=$SUPABASE_ANON_KEY|" "$ENV_FILE"
+    sed -i "s|SUPABASE_SERVICE_ROLE_KEY=.*|SUPABASE_SERVICE_ROLE_KEY=$SUPABASE_SERVICE_ROLE_KEY|" "$ENV_FILE"
 fi
 
 echo "Supabase の構築が完了しました"

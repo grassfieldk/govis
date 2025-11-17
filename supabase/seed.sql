@@ -381,132 +381,75 @@ COMMENT ON COLUMN expenditure_contracts.sole_bid_reason IS '一者応札・一�
 COMMENT ON COLUMN expenditure_contracts.other_contract_detail IS 'その他の契約（国庫債務負担行為等による契約）';
 
 -- ============================================================
--- ビュー定義
+-- 外部キー制約
 -- ============================================================
 
--- 基本情報セクション
+ALTER TABLE budgets
+ADD CONSTRAINT budgets_project_fkey
+FOREIGN KEY (project_year, project_id)
+REFERENCES projects_master(project_year, project_id)
+ON DELETE CASCADE;
 
-CREATE OR REPLACE VIEW policies_with_project AS
-SELECT
-    pm.project_name,
-    pm.ministry,
-    pm.bureau,
-    p.*
-FROM policies p
-JOIN projects_master pm USING (project_year, project_id);
+ALTER TABLE budget_items
+ADD CONSTRAINT budget_items_project_fkey
+FOREIGN KEY (project_year, project_id)
+REFERENCES projects_master(project_year, project_id)
+ON DELETE CASCADE;
 
-CREATE OR REPLACE VIEW laws_with_project AS
-SELECT
-    pm.project_name,
-    pm.ministry,
-    pm.bureau,
-    l.*
-FROM laws l
-JOIN projects_master pm USING (project_year, project_id);
+ALTER TABLE expenditures
+ADD CONSTRAINT expenditures_project_fkey
+FOREIGN KEY (project_year, project_id)
+REFERENCES projects_master(project_year, project_id)
+ON DELETE CASCADE;
 
-CREATE OR REPLACE VIEW subsidies_with_project AS
-SELECT
-    pm.project_name,
-    pm.ministry,
-    pm.bureau,
-    s.*
-FROM subsidies s
-JOIN projects_master pm USING (project_year, project_id);
+ALTER TABLE expenditure_flows
+ADD CONSTRAINT expenditure_flows_project_fkey
+FOREIGN KEY (project_year, project_id)
+REFERENCES projects_master(project_year, project_id)
+ON DELETE CASCADE;
 
-CREATE OR REPLACE VIEW related_projects_with_project AS
-SELECT
-    pm.project_name,
-    pm.ministry,
-    pm.bureau,
-    rp.*
-FROM related_projects rp
-JOIN projects_master pm USING (project_year, project_id);
+ALTER TABLE expenditure_contracts
+ADD CONSTRAINT expenditure_contracts_project_fkey
+FOREIGN KEY (project_year, project_id)
+REFERENCES projects_master(project_year, project_id)
+ON DELETE CASCADE;
 
--- 予算・執行セクション
+ALTER TABLE policies
+ADD CONSTRAINT policies_project_fkey
+FOREIGN KEY (project_year, project_id)
+REFERENCES projects_master(project_year, project_id)
+ON DELETE CASCADE;
 
-CREATE OR REPLACE VIEW budgets_with_project AS
-SELECT
-    pm.project_name,
-    pm.ministry,
-    pm.bureau,
-    b.*
-FROM budgets b
-JOIN projects_master pm USING (project_year, project_id);
+ALTER TABLE laws
+ADD CONSTRAINT laws_project_fkey
+FOREIGN KEY (project_year, project_id)
+REFERENCES projects_master(project_year, project_id)
+ON DELETE CASCADE;
 
-CREATE OR REPLACE VIEW budget_items_with_project AS
-SELECT
-    pm.project_name,
-    pm.ministry,
-    pm.bureau,
-    bi.*
-FROM budget_items bi
-JOIN projects_master pm USING (project_year, project_id);
+ALTER TABLE subsidies
+ADD CONSTRAINT subsidies_project_fkey
+FOREIGN KEY (project_year, project_id)
+REFERENCES projects_master(project_year, project_id)
+ON DELETE CASCADE;
 
--- 支出先セクション
+ALTER TABLE related_projects
+ADD CONSTRAINT related_projects_project_fkey
+FOREIGN KEY (project_year, project_id)
+REFERENCES projects_master(project_year, project_id)
+ON DELETE CASCADE;
 
-CREATE OR REPLACE VIEW expenditures_with_project AS
-SELECT
-    pm.project_name,
-    pm.ministry,
-    pm.bureau,
-    e.*
-FROM expenditures e
-JOIN projects_master pm USING (project_year, project_id);
+ALTER TABLE expenditure_usages
+ADD CONSTRAINT expenditure_usages_project_fkey
+FOREIGN KEY (project_year, project_id)
+REFERENCES projects_master(project_year, project_id)
+ON DELETE CASCADE;
 
-CREATE OR REPLACE VIEW expenditure_flows_with_project AS
-SELECT
-    pm.project_name,
-    pm.ministry,
-    pm.bureau,
-    ef.*
-FROM expenditure_flows ef
-JOIN projects_master pm USING (project_year, project_id);
-
-CREATE OR REPLACE VIEW expenditure_usages_with_project AS
-SELECT
-    pm.project_name,
-    pm.ministry,
-    pm.bureau,
-    eu.*
-FROM expenditure_usages eu
-JOIN projects_master pm USING (project_year, project_id);
-
-CREATE OR REPLACE VIEW expenditure_contracts_with_project AS
-SELECT
-    pm.project_name,
-    pm.ministry,
-    pm.bureau,
-    ec.*
-FROM expenditure_contracts ec
-JOIN projects_master pm USING (project_year, project_id);
-
--- 統合ビュー
-
-CREATE OR REPLACE VIEW projects_summary AS
-SELECT
-    pm.project_year,
-    pm.project_id,
-    pm.project_name,
-    pm.ministry,
-    pm.bureau,
-    pm.project_category,
-    pm.overview,
-    COUNT(DISTINCT p.seq_no) as policy_count,
-    COUNT(DISTINCT l.seq_no) as law_count,
-    COUNT(DISTINCT s.seq_no) as subsidy_count,
-    COUNT(DISTINCT b.seq_no) as budget_count,
-    COUNT(DISTINCT e.seq_no) as expenditure_count
-FROM projects_master pm
-LEFT JOIN policies p USING (project_year, project_id)
-LEFT JOIN laws l USING (project_year, project_id)
-LEFT JOIN subsidies s USING (project_year, project_id)
-LEFT JOIN budgets b USING (project_year, project_id)
-LEFT JOIN expenditures e USING (project_year, project_id)
-GROUP BY
-    pm.project_year,
-    pm.project_id,
-    pm.project_name,
-    pm.ministry,
-    pm.bureau,
-    pm.project_category,
-    pm.overview;
+-- SQL クエリを直接実行する関数
+CREATE OR REPLACE FUNCTION exec_sql(sql TEXT)
+RETURNS TABLE (
+  result jsonb
+) AS $$
+BEGIN
+  RETURN QUERY EXECUTE 'SELECT jsonb_agg(row_to_json(t.*)) as result FROM (' || sql || ') t';
+END;
+$$ LANGUAGE plpgsql;
