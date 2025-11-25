@@ -18,6 +18,7 @@ import {
 import { ReloadButton } from "@/components/reload-button";
 import { Card, CardContent } from "@/components/ui/card";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { formatCurrency } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 
@@ -69,29 +70,6 @@ interface DashboardData {
     totalBiddingContracts?: number;
   };
 }
-
-/**
- * 数値を日本円形式でフォーマット
- */
-const formatCurrency = (amount: number): string => {
-  if (amount >= 1000000000000) {
-    // 1兆以上
-    return `${(amount / 1000000000000).toFixed(1)}兆円`;
-  }
-  if (amount >= 100000000) {
-    // 1億以上1兆未満
-    return `${(amount / 100000000).toFixed(1)}億円`;
-  }
-  if (amount >= 10000) {
-    // 1万以上1億未満
-    return `${(amount / 10000).toFixed(1)}万円`;
-  }
-  return new Intl.NumberFormat("ja-JP", {
-    style: "currency",
-    currency: "JPY",
-    maximumFractionDigits: 0,
-  }).format(amount);
-};
 
 /**
  * サーバーサイドでダッシュボードデータを取得
