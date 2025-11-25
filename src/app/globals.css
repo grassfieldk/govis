@@ -3,6 +3,31 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
+  --foreground: #272727;
+  --background: var(--color-primary-50);
+
+  --color-primary-50: #f0fdfa;
+  --color-primary-100: #ccfbf1;
+  --color-primary-200: #99f6e4;
+  --color-primary-300: #5eead4;
+  --color-primary-400: #30bca7;
+  --color-primary-500: #2aa693;
+  --color-primary-600: #238778;
+  --color-primary-700: #115e59;
+  --color-primary-800: #134e4a;
+  --color-primary-900: #042f2e;
+  --color-primary: var(--color-primary-300);
+
+  --color-danger: #ef4444;
+
+  --color-text-primary: var(--color-neutral-900);
+  --color-text-secondary: var(--color-neutral-500);
+  --color-text-muted: var(--color-neutral-600);
+
+  --color-income: var(--color-primary-500);
+  --color-expense: var(--color-danger);
+
+  /* 以下は整理予定 */
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-primary: var(--primary);
@@ -19,27 +44,10 @@
   --color-input: var(--input);
   --color-border: var(--border);
   --color-ring: var(--ring);
-  --color-card: var(--card);
-  --color-card-foreground: var(--card-foreground);
-  --color-popover: var(--popover);
-  --color-popover-foreground: var(--popover-foreground);
-  --color-chart-1: var(--chart-1);
-  --color-chart-2: var(--chart-2);
-  --color-chart-3: var(--chart-3);
-  --color-chart-4: var(--chart-4);
-  --color-chart-5: var(--chart-5);
-  --color-sidebar: var(--sidebar);
-  --color-sidebar-foreground: var(--sidebar-foreground);
-  --color-sidebar-primary: var(--sidebar-primary);
-  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
-  --color-sidebar-accent: var(--sidebar-accent);
-  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
-  --color-sidebar-border: var(--sidebar-border);
-  --color-sidebar-ring: var(--sidebar-ring);
 }
 
 :root {
-  --foreground: #171717;
+  --foreground: #272727;
   --background: var(--color-primary-50);
 
   --color-primary-50: #f0fdfa;
@@ -214,7 +222,7 @@
   }
 
   table {
-    @apply w-full border-collapse border border-border bg-card;
+    @apply w-full border-collapse border border-border bg-white;
   }
   table:focus {
     outline: none;

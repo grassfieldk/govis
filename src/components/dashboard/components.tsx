@@ -39,16 +39,6 @@ export interface PercentageItem {
   percentage: number;
 }
 
-export interface PercentageListCardProps {
-  title: string;
-  icon: React.ReactNode;
-  tooltip: string;
-  items: PercentageItem[];
-  infoText?: string;
-  showBars?: boolean;
-  className?: string;
-}
-
 export interface TransparencyCardProps {
   transparency: {
     competitiveContractRatio: number;
@@ -77,8 +67,27 @@ export interface PercentageBarProps {
   color?: string;
 }
 
+export interface ListCardItem {
+  label: string;
+  value?: string;
+  subValue?: string;
+  metadata?: string;
+  percentage?: number;
+}
+
+export interface ListCardProps {
+  title: string;
+  icon: React.ReactNode;
+  tooltip: string;
+  items: ListCardItem[];
+  infoText?: string;
+  showNumbers?: boolean;
+  showPercentage?: boolean;
+  className?: string;
+}
+
 /**
- * セクションタイトルコンポーネント（アイコン + タイトル + ツールチップ）
+ * セクションタイトル
  */
 export const SectionTitle = ({
   title,
@@ -95,9 +104,7 @@ export const SectionTitle = ({
           <TooltipTrigger asChild>
             <Info className="w-4 h-4 text-muted-foreground cursor-help hover:text-foreground transition-colors" />
           </TooltipTrigger>
-          <TooltipContent>
-            <p>{tooltip}</p>
-          </TooltipContent>
+          <TooltipContent>{tooltip}</TooltipContent>
         </Tooltip>
       </TooltipProvider>
     )}
@@ -105,7 +112,7 @@ export const SectionTitle = ({
 );
 
 /**
- * 情報ボックスコンポーネント
+ * 情報ボックス
  */
 export const InfoBox = ({ children, className }: InfoBoxProps) => (
   <div className={`mt-4 p-3 bg-muted/50 rounded-lg ${className || ""}`}>
@@ -114,7 +121,7 @@ export const InfoBox = ({ children, className }: InfoBoxProps) => (
 );
 
 /**
- * パーセンテージバーコンポーネント
+ * パーセンテージバー
  */
 export const PercentageBar = ({
   percentage,
@@ -129,7 +136,7 @@ export const PercentageBar = ({
 );
 
 /**
- * 統計カードコンポーネント
+ * 統計カード
  */
 export const StatCard = ({
   title,
@@ -149,48 +156,7 @@ export const StatCard = ({
 );
 
 /**
- * パーセンテージリストカードコンポーネント
- */
-export const PercentageListCard = ({
-  title,
-  icon,
-  tooltip,
-  items,
-  infoText,
-  showBars = true,
-  className,
-}: PercentageListCardProps) => (
-  <Card className={className}>
-    <CardHeader>
-      <SectionTitle title={title} icon={icon} tooltip={tooltip} />
-    </CardHeader>
-    <CardContent>
-      <div className={showBars ? "space-y-4" : "space-y-3"}>
-        {items.map((item) => (
-          <div key={item.label} className={showBars ? "space-y-2" : undefined}>
-            <div className="flex justify-between items-center">
-              <span
-                className={
-                  showBars ? "font-medium text-sm" : "text-sm font-medium"
-                }
-              >
-                {item.label}
-              </span>
-              <span className="text-sm text-muted-foreground">
-                {item.value && `${item.value} `}({item.percentage.toFixed(1)}%)
-              </span>
-            </div>
-            {showBars && <PercentageBar percentage={item.percentage} />}
-          </div>
-        ))}
-      </div>
-      {infoText && <InfoBox>{infoText}</InfoBox>}
-    </CardContent>
-  </Card>
-);
-
-/**
- * 契約透明性指標カードコンポーネント
+ * 契約透明性指標カード
  */
 export const TransparencyCard = ({
   transparency,
@@ -266,7 +232,68 @@ export const TransparencyCard = ({
 );
 
 /**
- * 費目別支出分析カードコンポーネント
+ * リストカード（主要契約先・高額契約案件用の汎用コンポーネント）
+ */
+export const ListCard = ({
+  title,
+  icon,
+  tooltip,
+  items,
+  showNumbers = false,
+  showPercentage = false,
+  className,
+}: ListCardProps) => (
+  <Card className={className}>
+    <CardHeader>
+      <SectionTitle title={title} icon={icon} tooltip={tooltip} />
+    </CardHeader>
+    <CardContent>
+      <div className="space-y-3">
+        {items.map((item, index) => (
+          <div key={`${item.label}-${index}`}>
+            <div className="flex justify-between items-start gap-2">
+              <div className="flex-1">
+                <div className="flex items-start gap-2">
+                  {showNumbers && (
+                    <span className="text-sm font-medium text-muted-foreground flex-shrink-0">
+                      {index + 1}.
+                    </span>
+                  )}
+                  <span className="text-sm font-medium">{item.label}</span>
+                </div>
+                {item.metadata && (
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {item.metadata}
+                  </p>
+                )}
+              </div>
+              <div className="text-right flex-shrink-0">
+                {showPercentage && item.value && (
+                  <span className="text-sm text-muted-foreground">
+                    {item.value}
+                  </span>
+                )}
+                {!showPercentage && item.value && (
+                  <span className="text-sm font-bold text-primary">
+                    {item.value}
+                  </span>
+                )}
+                {item.subValue && (
+                  <p className="text-xs text-muted-foreground">
+                    {item.subValue}
+                  </p>
+                )}
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </CardContent>
+  </Card>
+);
+
+/**
+ * 費目別支出分析カード
  */
 export const ExpenseAnalysisCard = ({
   expenseAnalysis,
@@ -317,11 +344,6 @@ export const ExpenseAnalysisCard = ({
             </div>
           ))}
         </div>
-
-        <InfoBox className="mt-4">
-          費目別データ: {expenseAnalysis.totalExpenseRecords.toLocaleString()}
-          件の詳細支出を分析
-        </InfoBox>
       </CardContent>
     </Card>
   );

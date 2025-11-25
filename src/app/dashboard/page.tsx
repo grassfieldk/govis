@@ -10,13 +10,13 @@ import {
 } from "lucide-react";
 import {
   ExpenseAnalysisCard,
-  PercentageListCard,
-  SectionTitle,
+  ListCard,
+  type ListCardItem,
   StatCard,
   TransparencyCard,
 } from "@/components/dashboard/components";
 import { ReloadButton } from "@/components/reload-button";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { TooltipProvider } from "@/components/ui/tooltip";
 
 export const dynamic = "force-dynamic";
@@ -177,7 +177,7 @@ export default async function DashboardPage() {
       {/* 1. ヘッダ概要セクション */}
       <div className="container mx-auto px-4 py-8">
         <div className="mb-8">
-          <Card className="bg-gradient-to-r from-primary/10 to-primary/5 border-primary/20">
+          <Card>
             <CardContent className="p-4">
               <div className="text-center">
                 <h3 className="text-muted-foreground mb-3">総支出額</h3>
@@ -194,14 +194,13 @@ export default async function DashboardPage() {
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
           {/* 2. 府省庁別支出構成 */}
-          <PercentageListCard
+          <ListCard
             title="府省庁別支出構成"
             icon={<Building2 className="w-5 h-5" />}
             tooltip={sectionDescriptions.ministryBreakdown}
             items={data.ministryBreakdown.map((item) => ({
               label: item.ministry,
               value: `${formatCurrency(item.amount)} | ${item.projects}事業`,
-              percentage: item.percentage,
             }))}
             infoText={`上位3府省庁で ${topThreeShare.toFixed(1)}% を占めています`}
             className="lg:col-span-2"
@@ -235,21 +234,19 @@ export default async function DashboardPage() {
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
           {/* 5. 契約方式別分析 */}
-          <PercentageListCard
+          <ListCard
             title="契約方式別分析"
             icon={<Award className="w-5 h-5" />}
             tooltip={sectionDescriptions.contractTypes}
             items={data.contractTypes.slice(0, 5).map((item) => ({
               label: item.type,
               value: `${item.count}件`,
-              percentage: item.percentage,
             }))}
             infoText={`競争性指標: ${data.summary.competitiveness.toFixed(1)}%`}
-            showBars={true}
           />
 
           {/* 6. 事業規模分布 */}
-          <PercentageListCard
+          <ListCard
             title="事業規模分布"
             icon={<BarChart3 className="w-5 h-5" />}
             tooltip={sectionDescriptions.sizeDistribution}
@@ -261,7 +258,6 @@ export default async function DashboardPage() {
                 ([category, count]) => ({
                   label: category,
                   value: `${count}件`,
-                  percentage: (count / totalSizeCount) * 100,
                 }),
               );
             })()}
@@ -273,78 +269,34 @@ export default async function DashboardPage() {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
           {/* 8. 主要契約先 */}
-          <Card>
-            <CardHeader>
-              <SectionTitle
-                title="主要契約先"
-                icon={<Briefcase className="w-5 h-5" />}
-                tooltip={sectionDescriptions.topContractors}
-              />
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                {data.topContractors.slice(0, 5).map((item, index) => (
-                  <div
-                    key={item.contractor}
-                    className="flex justify-between items-center"
-                  >
-                    <div className="flex items-center space-x-2">
-                      <span className="text-sm font-medium text-muted-foreground">
-                        {index + 1}.
-                      </span>
-                      <span className="text-sm font-medium truncate max-w-[150px]">
-                        {item.contractor}
-                      </span>
-                    </div>
-                    <div className="text-right">
-                      <span className="text-sm text-muted-foreground">
-                        {formatCurrency(item.amount)}
-                      </span>
-                      <span className="text-xs text-muted-foreground block">
-                        {item.count}件
-                      </span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+          <ListCard
+            title="主要契約先"
+            icon={<Briefcase className="w-5 h-5" />}
+            tooltip={sectionDescriptions.topContractors}
+            items={data.topContractors.slice(0, 5).map(
+              (item): ListCardItem => ({
+                label: item.contractor,
+                value: formatCurrency(item.amount),
+                subValue: `${item.count}件`,
+              }),
+            )}
+            showNumbers={true}
+          />
 
           {/* 9. 高額契約案件 */}
-          <Card>
-            <CardHeader>
-              <SectionTitle
-                title="高額契約案件"
-                icon={<TrendingUp className="w-5 h-5" />}
-                tooltip={sectionDescriptions.highValueContracts}
-              />
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {data.highValueContracts.map((item, index) => (
-                  <div
-                    key={
-                      item.id ||
-                      `contract-${index}-${item.contractName}-${item.amount}`
-                    }
-                    className="border rounded-lg p-3 bg-muted/30"
-                  >
-                    <div className="flex justify-between items-start mb-2">
-                      <span className="text-sm font-medium">
-                        {index + 1}. {item.contractName}
-                      </span>
-                      <span className="text-sm font-bold text-primary">
-                        {formatCurrency(Number.parseFloat(item.amount))}
-                      </span>
-                    </div>
-                    <p className="text-xs text-muted-foreground">
-                      {item.ministry}
-                    </p>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+          <ListCard
+            title="高額契約案件"
+            icon={<TrendingUp className="w-5 h-5" />}
+            tooltip={sectionDescriptions.highValueContracts}
+            items={data.highValueContracts.map(
+              (item): ListCardItem => ({
+                label: item.contractName,
+                value: formatCurrency(Number.parseFloat(item.amount)),
+                metadata: item.ministry,
+              }),
+            )}
+            showNumbers={true}
+          />
         </div>
 
         {/* フッター情報 */}

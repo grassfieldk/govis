@@ -2,6 +2,7 @@ import * as TooltipPrimitive from "@radix-ui/react-tooltip";
 import * as React from "react";
 
 import { cn } from "@/lib/utils";
+import { Card } from "./card";
 
 const TooltipProvider = TooltipPrimitive.Provider;
 
@@ -17,12 +18,7 @@ const TooltipContent = React.forwardRef<
     <TooltipPrimitive.Content
       ref={ref}
       sideOffset={sideOffset}
-      className={cn(
-        "z-[100] overflow-hidden rounded-md bg-card text-card-foreground border border-border px-3 py-2 text-sm shadow-lg",
-        "max-w-xs leading-relaxed",
-        "animate-in fade-in-0 zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95",
-        className,
-      )}
+      className={cn("z-[100] max-w-xs p-2 bg-white/80 shadow text-sm", className)}
       {...props}
     />
   </TooltipPrimitive.Portal>
