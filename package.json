@@ -15,6 +15,7 @@
     "@google/generative-ai": "^0.24.1",
     "@monaco-editor/react": "^4.7.0",
     "@nivo/sankey": "^0.99.0",
+    "@nivo/treemap": "^0.99.0",
     "@radix-ui/react-label": "^2.1.7",
     "@radix-ui/react-select": "^2.2.6",
     "@radix-ui/react-separator": "^1.1.7",
