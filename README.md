@@ -86,8 +86,18 @@ cp ./.env.example ./.env
 `NEXT_PUBLIC_SUPABASE_URL` と `NEXT_PUBLIC_SUPABASE_ANON_KEY` を設定
 
 スクリプトを実行し、データを登録
-```
+```bash
 python tools/build_database.py
+```
+
+### Supabase の初期化
+
+問題が発生した場合、データを完全に作り直したい場合などはデータベースを初期化してください
+※ ほかの開発者と共通のデータベースを使用している場合は注意すること
+
+```bash
+# データベースの初期化
+npx supabase db reset
 ```
 
 ### 環境変数の設定
