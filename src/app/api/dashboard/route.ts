@@ -53,7 +53,6 @@ export async function GET() {
       WHERE b.budget_year = 2023 AND b.execution_amount IS NOT NULL AND b.execution_amount != ''
       GROUP BY pm.ministry
       ORDER BY total_amount DESC
-      LIMIT 10
     `;
 
     const ministryData = await executeSQLQuery(ministryQuery);
@@ -97,15 +96,27 @@ export async function GET() {
     // === 平均契約額 ===
     const averageAmount = totalProjects > 0 ? totalAmount / totalProjects : 0;
 
-    // === 契約方式別分析 ===
+    // === 契約方式別分析（TOP 15、ノイズフィルタリング） ===
     const contractTypeQuery = `
       SELECT
         specific_contract_method as contract_method,
         COUNT(*) as count
       FROM expenditures
-      WHERE specific_contract_method IS NOT NULL AND specific_contract_method != ''
+      WHERE specific_contract_method IS NOT NULL
+        AND specific_contract_method NOT IN ('', '-', 'ー', '--', ' ')
+        AND specific_contract_method NOT LIKE '%その他%'
+        AND specific_contract_method NOT LIKE '%再委託%'
+        AND specific_contract_method NOT LIKE '%支出委任%'
+        AND specific_contract_method NOT LIKE '%予算%'
+        AND specific_contract_method NOT LIKE '%示達%'
+        AND specific_contract_method NOT LIKE '%配分%'
+        AND specific_contract_method NOT LIKE '%配賦%'
+        AND specific_contract_method NOT LIKE '%旅費%'
+        AND specific_contract_method NOT LIKE '%移替%'
+        AND CHAR_LENGTH(TRIM(specific_contract_method)) > 2
       GROUP BY specific_contract_method
       ORDER BY count DESC
+      LIMIT 15
     `;
 
     const contractTypeData = await executeSQLQuery(contractTypeQuery);
@@ -126,24 +137,29 @@ export async function GET() {
       }),
     );
 
-    // === 競争性指標 ===
-    const competitiveTypes = ["一般競争契約", "指名競争契約"];
-    const competitiveCount = contractTypeData
-      .filter((row: Record<string, unknown>) =>
-        competitiveTypes.some((type) =>
-          String(row.contract_method || "").includes(type),
-        ),
-      )
-      .reduce(
-        (sum: number, row: Record<string, unknown>) =>
-          sum + safeParseFloat(row.count),
-        0,
-      );
+    // === 競争性指標（一般競争契約に限定） ===
+    const competitiveCountQuery = `
+      SELECT COUNT(*) as count
+      FROM expenditures
+      WHERE specific_contract_method LIKE '%一般競争契約%'
+        AND specific_contract_method IS NOT NULL
+        AND specific_contract_method != ''
+    `;
+
+    const competitiveCountData = await executeSQLQuery(competitiveCountQuery);
+    const competitiveCount = safeParseFloat(
+      competitiveCountData[0]?.count || 0,
+    );
+
+    // 競争性指標の計算（全支出記録に対する一般競争契約の割合）
+    const allExpenseCountQuery = `
+      SELECT COUNT(*) as count FROM expenditures
+    `;
+    const allExpenseCountData = await executeSQLQuery(allExpenseCountQuery);
+    const allExpenseCount = safeParseFloat(allExpenseCountData[0]?.count || 0);
 
     const competitiveness =
-      totalContractCount > 0
-        ? (competitiveCount / totalContractCount) * 100
-        : 0;
+      allExpenseCount > 0 ? (competitiveCount / allExpenseCount) * 100 : 0;
 
     // === 事業規模分布 ===
     const sizeDistQuery = `
@@ -174,14 +190,21 @@ export async function GET() {
       sizeDistribution[String(row.category || "")] = safeParseFloat(row.count);
     });
 
-    // === 主要契約先（TOP 5） ===
+    // === 主要契約先（TOP 5、社会保障除外） ===
     const topContractorsQuery = `
       SELECT
         recipient_name as contractor,
         COUNT(*) as count,
         SUM(CAST(amount AS BIGINT)) as total_amount
       FROM expenditures
-      WHERE recipient_name IS NOT NULL AND recipient_name != '' AND amount IS NOT NULL AND amount != ''
+      WHERE recipient_name IS NOT NULL
+        AND recipient_name NOT IN ('', '-', 'ー', '--', ' ')
+        AND recipient_name NOT LIKE '%年金%'
+        AND recipient_name NOT LIKE '%給付%'
+        AND recipient_name NOT LIKE '%その他%'
+        AND amount IS NOT NULL
+        AND amount != ''
+        AND CAST(amount AS BIGINT) > 0
       GROUP BY recipient_name
       ORDER BY total_amount DESC
       LIMIT 5
